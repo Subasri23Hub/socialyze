@@ -1,0 +1,63 @@
+# ── Secrets & environment variables ───────────────────────────────
+.env
+.env.local
+.env.*.local
+.streamlit/secrets.toml
+
+# ── Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Virtual environments ───────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Jupyter ────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Node.js ────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+.vite/
+
+# ── HuggingFace / ML model weights (large binary files) ───────────
+data/models/tone_classifier/
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+
+# ── Raw datasets (may contain PII or licensed data) ───────────────
+data/raw/
+
+# ── OS artefacts ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE / editors ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ───────────────────────────────────────────────────────────
+*.log
+data/evaluation/logs/

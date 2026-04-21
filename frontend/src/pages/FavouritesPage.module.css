@@ -1,0 +1,37 @@
+/* FavouritesPage extras — supplements ActiveCampaigns.module.css */
+
+.allLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9BA3BB;
+  margin: 24px 0 10px;
+}
+
+/* ★ Star button — top-left of card thumbnail */
+.starBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+  z-index: 2;
+}
+
+.starBtn:hover {
+  background: rgba(255,255,255,0.38);
+  transform: scale(1.1);
+}

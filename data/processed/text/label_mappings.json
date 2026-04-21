@@ -1,0 +1,28 @@
+{
+  "tone": {
+    "Casual": 0,
+    "Humorous": 1,
+    "Inspirational": 2,
+    "Professional": 3,
+    "Urgent": 4
+  },
+  "platform": {
+    "Facebook": 0,
+    "Instagram": 1,
+    "Linkedin": 2,
+    "Tiktok": 3,
+    "Twitter": 4
+  },
+  "audience": {
+    "Entrepreneurs": 0,
+    "Gen Z": 1,
+    "Millennials": 2,
+    "Parents": 3,
+    "Professionals": 4,
+    "Students": 5
+  },
+  "engagement_label": {
+    "high": 0,
+    "medium": 1
+  }
+}

@@ -1,0 +1,34 @@
+# AI Social Media Campaign Generator — Python Dependencies
+# Team: Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
+# Company: Sourcesys Technologies
+#
+# Install: pip install -r requirements.txt
+
+# ── Streamlit app ──────────────────────────────────────────────────
+streamlit>=1.32.0
+
+# ── Google Gemini API ──────────────────────────────────────────────
+google-genai>=0.3.0
+
+# ── Data handling ──────────────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.26.0
+
+# ── NLP preprocessing ─────────────────────────────────────────────
+nltk>=3.8.1
+
+# ── ML / evaluation ───────────────────────────────────────────────
+scikit-learn>=1.4.0
+
+# ── HuggingFace model training (optional — only for train.py) ─────
+# Uncomment if running training/train.py:
+# transformers>=4.40.0
+# datasets>=2.19.0
+# torch>=2.2.0
+
+# ── Environment variables ──────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Utilities ──────────────────────────────────────────────────────
+requests>=2.31.0
+tqdm>=4.66.0

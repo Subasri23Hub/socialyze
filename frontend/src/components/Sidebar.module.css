@@ -1,0 +1,169 @@
+.sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid rgba(0,0,0,0.08);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.brandIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3B6BF5, #0EA5B0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0D0F1A;
+  letter-spacing: -0.02em;
+}
+
+.sectionLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #9BA3BB;
+  margin: 16px 0 6px 8px;
+  display: block;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5A607A;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 1px;
+  user-select: none;
+}
+
+.navItem:hover { background: #F0F2F8; color: #0D0F1A; }
+
+.navItem.active {
+  background: #EBF0FF;
+  color: #3B6BF5;
+  font-weight: 600;
+}
+
+/* Creator Studio active state — blue tint (same as standard active) */
+.navItem.activeCreator {
+  background: #EBF0FF;
+  color: #3B6BF5;
+  font-weight: 600;
+}
+
+/* Compliance Guard active state — blue tint */
+.navItem.activeCompliance {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-weight: 600;
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.navItem.active .navIcon,
+.navItem.activeCreator .navIcon { opacity: 1; }
+
+.spacer { flex: 1; }
+
+/* ── Logout button ── */
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9BA3BB;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.logoutBtn:hover {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #B91C1C;
+}
+
+/* ── User row ── */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  cursor: default;
+  transition: background 0.12s;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3B6BF5, #8B5CF6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.userInfo { flex: 1; min-width: 0; }
+
+.userName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0D0F1A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 10.5px;
+  color: #9BA3BB;
+  margin-top: 1px;
+}

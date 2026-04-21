@@ -1,0 +1,3 @@
+# DEPRECATED — development scratch file. Safe to delete.
+# This file was used during development as a temporary import reference.
+# It is NOT imported anywhere and has no effect on the application.

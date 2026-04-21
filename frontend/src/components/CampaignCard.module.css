@@ -1,0 +1,239 @@
+.card {
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+}
+
+/* Thumbnail gradients */
+.thumb {
+  height: 88px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 12px 14px;
+}
+
+.thumb1 { background: linear-gradient(135deg, #38BDF8 0%, #3B6BF5 60%, #6366F1 100%); }
+.thumb2 { background: linear-gradient(135deg, #34D399 0%, #0EA5B0 60%, #0EA5E9 100%); }
+.thumb3 { background: linear-gradient(135deg, #F472B6 0%, #C084FC 60%, #818CF8 100%); }
+.thumb4 { background: linear-gradient(135deg, #FB923C 0%, #F59E0B 60%, #EAB308 100%); }
+
+.thumbDeco {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.deleteBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: background 0.12s;
+  backdrop-filter: blur(4px);
+}
+
+.deleteBtn:hover { background: rgba(255,255,255,0.35); }
+
+.badge {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Body */
+.body { padding: 12px 18px 14px; }
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0D0F1A;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.more {
+  color: #9BA3BB;
+  cursor: pointer;
+  font-size: 16px;
+  letter-spacing: 1px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Three-dot menu ── */
+.menuWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.moreBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #9BA3BB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  padding: 0;
+}
+.moreBtn:hover {
+  background: #F0F2F8;
+  color: #3B6BF5;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.09);
+  border-radius: 11px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  padding: 5px;
+  min-width: 185px;
+  animation: dropIn 0.12s ease;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.dropItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.dropItem:hover {
+  background: #F0F4FF;
+  color: #3B6BF5;
+}
+.dropItem:hover svg {
+  stroke: #3B6BF5;
+}
+
+.desc {
+  font-size: 12px;
+  color: #5A607A;
+  line-height: 1.55;
+  margin-bottom: 12px;
+  font-weight: 400;
+}
+
+/* Platform pills */
+.platformRow {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.platPill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.ig { background: #FDF2F8; color: #9D174D; }
+.tw { background: #EFF6FF; color: #1D4ED8; }
+.li { background: #EFF9FF; color: #0369A1; }
+.fb { background: #EFF6FF; color: #1E40AF; }
+.tk { background: #FEF2F2; color: #991B1B; }
+
+/* Chart */
+.tensionSection { margin-bottom: 10px; }
+
+.tensionHdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.tensionLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9BA3BB;
+}
+
+.tensionStage {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #3B6BF5;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.ago { font-size: 11px; color: #9BA3BB; }
+
+.editLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3B6BF5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}

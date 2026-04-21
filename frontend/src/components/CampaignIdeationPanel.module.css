@@ -1,0 +1,285 @@
+.panel { background: #fff; border: 1.5px solid rgba(0,0,0,0.09); border-radius: 16px; padding: 22px 24px; margin-bottom: 28px; animation: slideDown 0.2s ease; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+.title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #0D0F1A; letter-spacing: -0.02em; }
+.sub { font-size: 11.5px; color: #9BA3BB; margin-top: 3px; }
+.closeBtn { background: none; border: none; cursor: pointer; font-size: 16px; color: #9BA3BB; padding: 2px 6px; border-radius: 6px; }
+.closeBtn:hover { background: #F0F2F8; color: #5A607A; }
+
+.fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.fieldLabel { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #9BA3BB; margin-bottom: 6px; }
+.input { width: 100%; background: #F5F6FA; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #0D0F1A; outline: none; transition: border-color 0.15s; appearance: none; box-sizing: border-box; }
+.input:focus { border-color: #EA580C; background: #fff; }
+.input::placeholder { color: #C4C9D9; }
+
+.error { background: #FEF2F2; color: #B91C1C; font-size: 12.5px; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; border: 1px solid #FECACA; }
+.actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.cancelBtn { background: #fff; color: #5A607A; border: 1.5px solid rgba(0,0,0,0.09); border-radius: 9px; padding: 8px 18px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cancelBtn:hover { background: #F5F6FA; }
+.genBtn { display: flex; align-items: center; gap: 7px; background: #EA580C; color: white; border: none; border-radius: 9px; padding: 9px 20px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.genBtn:hover:not(:disabled) { opacity: 0.88; }
+.genBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.saveBtn { display: inline-flex; align-items: center; gap: 6px; background: #3B6BF5; color: white; border: none; border-radius: 9px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.saveBtn:hover { opacity: 0.88; }
+.saveBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.saveSuccess { background: #F0FDF4; border: 1px solid #BBF7D0; color: #14532D; border-radius: 9px; padding: 9px 14px; font-size: 13px; margin-bottom: 10px; font-weight: 500; }
+.saveError   { background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; border-radius: 9px; padding: 9px 14px; font-size: 13px; margin-bottom: 10px; font-weight: 500; }
+
+.spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Result ─────────────────────────────── */
+.result { animation: slideDown 0.2s ease; }
+
+.resultHdr { display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.resultTitle { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #0D0F1A; letter-spacing: -0.02em; }
+.resultSub   { font-size: 12.5px; color: #9BA3BB; }
+
+/* ─── Idea cards ─────────────────────────── */
+.ideaList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+.ideaCard {
+  background: var(--card-bg, #F5F6FA);
+  border: 1.5px solid var(--card-border, rgba(0,0,0,0.08));
+  border-radius: 14px;
+  padding: 14px 16px 14px;
+  transition: box-shadow 0.15s;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ideaCard:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.08); }
+.ideaOpen { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+/* Card header row */
+.ideaHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+
+.ideaNum {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.ideaHeaderMid {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ideaTitleText {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0D0F1A;
+  letter-spacing: -0.01em;
+}
+
+.ideaRiskBadge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Tagline — always visible below header */
+.ideaTagline {
+  font-size: 13px;
+  font-weight: 600;
+  font-style: italic;
+  margin-top: 8px;
+  margin-left: 42px;
+  line-height: 1.5;
+}
+
+/* Expanded body */
+.ideaBody {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Section block with left accent bar */
+.ideaSection {
+  border-left: 3px solid;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 0 9px 9px 0;
+}
+
+.sectionLabelText {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9BA3BB;
+  margin-bottom: 6px;
+}
+
+.sectionBodyText {
+  font-size: 13px;
+  color: #1E293B;
+  line-height: 1.7;
+}
+
+/* Sample post block */
+.samplePostBlock {
+  border: 1.5px solid;
+  border-radius: 10px;
+  padding: 13px 15px;
+  background: rgba(255,255,255,0.85);
+}
+
+.samplePostText {
+  font-size: 13.5px;
+  color: #0D0F1A;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* Two column layout */
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Bottom meta pills */
+.metaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metaPill {
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1.5px solid;
+  line-height: 1.5;
+}
+
+.winPill {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  color: #78350F;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Hashtag Breakdown */
+.hashBreakdownBlock {
+  border: 1.5px solid;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.75);
+  margin-top: 4px;
+}
+
+.hashBreakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.hashBreakdownRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.hashTag {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.hashBreakdownDesc {
+  font-size: 12.5px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.hashBreakdownItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.whenToPost {
+  border-left: 3px solid;
+  padding: 5px 10px;
+  border-radius: 0 6px 6px 0;
+  background: rgba(255,255,255,0.9);
+  margin-left: 4px;
+}
+
+.whenToPostLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--card-accent);
+  margin-bottom: 3px;
+}
+
+.whenToPostText {
+  display: block;
+  font-size: 12px;
+  color: #1E293B;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.resultActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+@media (max-width: 900px) {
+  .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .twoCol { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .fields { grid-template-columns: 1fr; }
+  .ideaTagline { margin-left: 0; }
+  .resultActions { flex-direction: column; align-items: stretch; }
+}

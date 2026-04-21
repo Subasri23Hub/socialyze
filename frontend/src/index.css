@@ -1,0 +1,31 @@
+/* ─── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:            #F5F6FA;
+  --surface:       #FFFFFF;
+  --surface2:      #F0F2F8;
+  --border:        rgba(0,0,0,0.08);
+  --border2:       rgba(0,0,0,0.13);
+  --text1:         #0D0F1A;
+  --text2:         #5A607A;
+  --text3:         #9BA3BB;
+  --accent:        #3B6BF5;
+  --accent-light:  #EBF0FF;
+  --green-light:   #DCFCE7;
+  --font-h:        'Syne', sans-serif;
+  --font-b:        'DM Sans', sans-serif;
+}
+
+body {
+  font-family: var(--font-b);
+  background: var(--bg);
+  color: var(--text1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }

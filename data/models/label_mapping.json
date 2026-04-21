@@ -1,0 +1,7 @@
+{
+  "Casual": 0,
+  "Humorous": 1,
+  "Inspirational": 2,
+  "Professional": 3,
+  "Urgent": 4
+}

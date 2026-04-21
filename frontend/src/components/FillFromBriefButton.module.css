@@ -1,0 +1,302 @@
+/* ─────────────────────────────────────────────────────────────
+   FillSourceSelector  (FillFromBriefButton.module.css)
+   Two-option import bar shown at the top of every service panel
+───────────────────────────────────────────────────────────── */
+
+.selectorRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* ── Row containing both option buttons ── */
+.selectorRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Each option button ── */
+.optionBtn {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #FAFBFF;
+  border: 1.5px solid #E2E8FF;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.17s ease;
+  text-align: left;
+  position: relative;
+}
+
+.optionBtn:hover:not(:disabled) {
+  background: #F0F4FF;
+  border-color: #3B6BF5;
+  box-shadow: 0 2px 10px rgba(59,107,245,0.10);
+  transform: translateY(-1px);
+}
+
+.optionBtnActive {
+  background: #F0F4FF !important;
+  border-color: #3B6BF5 !important;
+}
+
+.optionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Icon circle ── */
+.optionIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Text block ── */
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.optionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0D0F1A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionDesc {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #7A819A;
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(59,107,245,0.25);
+  border-top-color: #3B6BF5;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Hub wrapper — relative anchor for dropdown ── */
+.hubWrapper {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.hubWrapper .optionBtn {
+  width: 100%;
+}
+
+/* ── Dropdown ── */
+.hubDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 300px;
+  background: #fff;
+  border: 1.5px solid #E2E8FF;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  z-index: 200;
+  overflow: hidden;
+  animation: dropIn 0.15s ease;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Search row inside dropdown ── */
+.hubSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #F1F4FF;
+}
+
+.hubSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #0D0F1A;
+  background: transparent;
+}
+
+.hubSearchInput::placeholder { color: #B0B8D0; }
+
+.hubSearchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: #9BA3BB;
+  display: flex;
+  align-items: center;
+}
+.hubSearchClear:hover { color: #3B6BF5; }
+
+/* ── Brand list ── */
+.hubList {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.hubEmpty {
+  padding: 18px 14px;
+  font-size: 12.5px;
+  color: #9BA3BB;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── Individual brand item ── */
+.hubItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  text-align: left;
+  transition: background 0.12s;
+}
+.hubItem:hover { background: #F5F7FF; }
+
+.hubAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.hubItemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.hubItemName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0D0F1A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hubItemIndustry {
+  font-size: 11.5px;
+  color: #7A819A;
+}
+
+.hubItemTone {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3B6BF5;
+  background: #EBF0FF;
+  border-radius: 6px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Footer ── */
+.hubFooter {
+  padding: 9px 14px;
+  font-size: 11.5px;
+  color: #9BA3BB;
+  border-top: 1px solid #F1F4FF;
+  background: #FAFBFF;
+}
+
+.hubFooterLink {
+  color: #3B6BF5;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hubFooterLink:hover { text-decoration: underline; }
+
+/* ── Status notices ── */
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #92400E;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  padding: 7px 12px;
+  width: fit-content;
+}
+
+.noticeSuccess {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #15803D;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  width: fit-content;
+}
+
+.noticeHub {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #16A34A;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  width: fit-content;
+}
+
+/* ── Legacy classes kept for safety ── */
+.wrap { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.btn { display: none; } /* old single button — now replaced */

@@ -1,0 +1,355 @@
+/* CampaignWorkspace.module.css */
+
+.workspace {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+  background: #F5F6FA;
+  min-width: 0;
+}
+
+/* Back link */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3B6BF5;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
+  transition: opacity 0.15s;
+}
+.backLink:hover { opacity: 0.7; }
+
+/* ── Header ── */
+.header {
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.headerLeft { flex: 1; min-width: 0; }
+.campName {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0D0F1A;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.statusPill {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.platPill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #F1F5F9;
+  color: #475569;
+}
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #9BA3BB;
+}
+.refreshBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #5A607A;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.refreshBtn:hover { background: #EBF0FF; color: #3B6BF5; }
+
+/* ── Timeline header ── */
+.timelineLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0D0F1A;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.timelineCount {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9BA3BB;
+}
+
+/* ── Timeline ── */
+.timeline { display: flex; flex-direction: column; gap: 0; padding-bottom: 40px; }
+.timelineItem { display: flex; gap: 14px; align-items: flex-start; }
+.timelineDotCol { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 14px; }
+.timelineDot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1; flex-shrink: 0;
+}
+.timelineLine { width: 2px; flex: 1; min-height: 24px; background: rgba(0,0,0,0.08); margin: 6px 0; }
+
+/* ── Output Card ── */
+.outputCard {
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  min-width: 0;
+}
+.outputCard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.outputCardOpen { border-color: rgba(59,107,245,0.2); box-shadow: 0 4px 16px rgba(59,107,245,0.08); }
+
+.cardHdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+  gap: 10px;
+}
+.cardHdrLeft { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; flex: 1; min-width: 0; }
+.typeBadge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; padding: 4px 10px;
+  border-radius: 8px; letter-spacing: 0.01em;
+}
+.cardTime { font-size: 11.5px; color: #9BA3BB; }
+.cardToggle { flex-shrink: 0; display: flex; align-items: center; }
+.cardBody { padding: 0 18px 18px; border-top: 1px solid rgba(0,0,0,0.06); }
+
+/* ── Section ── */
+.section { margin-top: 18px; }
+.sectionTitle {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: #9BA3BB; margin-bottom: 10px;
+}
+.prose { font-size: 13px; color: #5A607A; line-height: 1.6; }
+
+/* Chips */
+.chipRow { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { font-size: 11.5px; font-weight: 600; padding: 4px 11px; border-radius: 20px; background: #EBF0FF; color: #3B6BF5; }
+
+/* Platform tabs */
+.tabRow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tab {
+  background: #F5F6FA; border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 8px; padding: 5px 13px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+  color: #5A607A; cursor: pointer; transition: all 0.15s;
+}
+.tabActive { background: #EBF0FF; border-color: transparent; color: #3B6BF5; }
+
+/* Post card */
+.postCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.postNum { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9BA3BB; margin-bottom: 7px; }
+.postHook { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 8px; padding: 8px 10px; background: #EBF0FF; border-radius: 7px; }
+.hookLabel { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; color: #3B6BF5; padding-top: 2px; flex-shrink: 0; }
+.hookText { font-size: 12.5px; color: #0D0F1A; line-height: 1.5; }
+.postCaption { font-size: 13px; color: #0D0F1A; line-height: 1.6; margin-bottom: 9px; }
+.hashRow { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.hashTag { font-size: 11px; font-weight: 600; color: #3B6BF5; background: #EBF0FF; padding: 3px 8px; border-radius: 6px; }
+.postMeta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #9BA3BB; }
+
+/* ── Audience persona cards ── */
+.personaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.personaCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 12px; padding: 16px; border-top-width: 3px; }
+.personaHdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.personaAvatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+/* legacy avatar used in old schema card */
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #3B6BF5, #6366F1);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+.personaName { font-size: 13.5px; font-weight: 700; color: #0D0F1A; }
+.archetype { font-size: 11px; font-weight: 600; margin-top: 2px; opacity: 0.85; }
+
+/* Info block — used everywhere */
+.infoBlock { margin-top: 10px; }
+.infoLabel { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #9BA3BB; margin-bottom: 3px; }
+.infoValue { font-size: 12.5px; color: #5A607A; line-height: 1.5; }
+
+/* Messaging / hook highlight block */
+.messagingBlock { margin-top: 10px; border-left: 3px solid #3B6BF5; border-radius: 8px; padding: 10px 12px; }
+.messagingText { font-size: 13px; font-weight: 600; line-height: 1.5; }
+
+/* Platform badge */
+.platBadge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; margin-top: 4px; }
+
+/* Objection block */
+.objectionBlock { margin-top: 10px; background: #FFF7ED; border-radius: 8px; padding: 8px 12px; }
+
+/* Demo / sample hook block */
+.demoBlock { margin-top: 10px; background: #F8F9FC; border-radius: 8px; padding: 8px 12px; }
+.blockLabel { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #9BA3BB; margin-bottom: 4px; }
+.blockText { font-size: 12.5px; color: #5A607A; line-height: 1.5; }
+
+/* Psychographic block */
+.psychoBlock { margin-top: 10px; padding: 8px 12px; background: #F8F9FC; border-radius: 8px; }
+
+/* ── Ideation expand card ── */
+.ideaExpandCard {
+  background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+  cursor: pointer; transition: box-shadow 0.15s;
+}
+.ideaExpandCard:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.ideaExpandHdr { display: flex; align-items: center; gap: 10px; }
+.ideaNum { font-size: 11px; font-weight: 700; color: #3B6BF5; background: #EBF0FF; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+.ideaExpandTitle { font-size: 13px; font-weight: 700; color: #0D0F1A; flex: 1; }
+.chevron { font-size: 10px; color: #9BA3BB; }
+.ideaTagline { font-size: 12px; color: #EA580C; margin-top: 6px; font-style: italic; }
+.ideaExpandBody { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.07); }
+
+/* ── Ideation expanded section blocks ── */
+.ideaSection {
+  background: #F8F9FC;
+  border-left: 3px solid #EA580C;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.ideaSectionLabel {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: #9BA3BB; margin-bottom: 5px;
+}
+.ideaSectionText { font-size: 12.5px; color: #5A607A; line-height: 1.55; }
+
+/* Sample post block inside ideation */
+.samplePostBlock {
+  background: #FFF7ED;
+  border: 1.5px solid #FED7AA;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.samplePostText { font-size: 12.5px; color: #5A607A; line-height: 1.6; margin-top: 6px; white-space: pre-wrap; }
+
+/* Pills row inside ideation */
+.metaPill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600;
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid transparent;
+}
+.winPill {
+  font-size: 12px; color: #15803D; background: #F0FDF4;
+  border-radius: 8px; padding: 6px 12px;
+}
+
+/* Campaign ideas (post_generator) */
+.ideaCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.ideaTitle { font-size: 13px; font-weight: 700; color: #0D0F1A; margin-bottom: 5px; }
+.ideaDesc { font-size: 12.5px; color: #5A607A; margin-bottom: 6px; line-height: 1.5; }
+.ideaImpact { font-size: 12px; color: #16A34A; }
+
+/* Custom Flow — Pillars */
+.pillarsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.pillarCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.pillarNum { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9333EA; }
+.pillarText { font-size: 13px; color: #0D0F1A; line-height: 1.5; }
+
+/* Custom Flow — Strategy */
+.stratCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.stratPlat { font-size: 11px; font-weight: 700; color: #9333EA; background: #FDF4FF; padding: 3px 9px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.stratText { font-size: 12.5px; color: #5A607A; line-height: 1.5; flex: 1; min-width: 0; }
+
+/* Custom Flow — Posting Plan */
+.planGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.weekCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 12px 14px; }
+.weekLabel { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9333EA; margin-bottom: 4px; }
+.weekFocus { font-size: 12.5px; font-weight: 600; color: #0D0F1A; margin-bottom: 4px; }
+.weekTypes { font-size: 11.5px; color: #9BA3BB; }
+
+/* Custom Flow — Captions */
+.captionCard { background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+.captionNum { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9BA3BB; margin-bottom: 6px; display: block; }
+
+/* Copy button */
+.copyBtn {
+  margin-top: 12px; background: none;
+  border: 1.5px solid rgba(59,107,245,0.3); border-radius: 8px;
+  padding: 7px 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; color: #3B6BF5; cursor: pointer; transition: all 0.15s;
+}
+.copyBtn:hover { background: #EBF0FF; }
+
+/* No data */
+.noData { font-size: 13px; color: #9BA3BB; padding: 10px 0; }
+
+/* Raw JSON fallback */
+.rawJson { font-size: 11.5px; color: #5A607A; background: #F8F9FC; border: 1px solid rgba(0,0,0,0.07); border-radius: 8px; padding: 12px; overflow: auto; max-height: 300px; white-space: pre-wrap; word-break: break-all; }
+
+/* Error Boundary fallback */
+.fallbackBox { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px 20px; background: #FFF7ED; border: 1.5px solid #FED7AA; border-radius: 12px; margin-top: 14px; text-align: center; }
+.fallbackIcon { font-size: 22px; }
+.fallbackText { font-size: 13px; font-weight: 600; color: #9A3412; }
+.fallbackSub { font-size: 11px; color: #C2410C; opacity: 0.8; max-width: 320px; }
+
+/* Empty state */
+.empty { text-align: center; padding: 50px 20px; background: #fff; border: 1.5px dashed rgba(0,0,0,0.1); border-radius: 14px; margin-bottom: 24px; }
+.emptyIcon { font-size: 36px; margin-bottom: 12px; }
+.emptyTitle { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #0D0F1A; margin-bottom: 8px; }
+.emptySub { font-size: 13px; color: #9BA3BB; max-width: 420px; margin: 0 auto; line-height: 1.6; }
+
+/* Loading / Error */
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 80px 20px; color: #9BA3BB; font-size: 13px; }
+.spinner { width: 28px; height: 28px; border: 3px solid rgba(59,107,245,0.15); border-top-color: #3B6BF5; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.errorBox { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; padding: 20px 28px; color: #B91C1C; font-size: 13px; }
+.backBtn { background: #B91C1C; color: #fff; border: none; border-radius: 8px; padding: 6px 16px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+@media (max-width: 700px) {
+  .workspace { padding: 16px; }
+  .header { flex-direction: column; }
+  .personaGrid { grid-template-columns: 1fr; }
+  .pillarsGrid { grid-template-columns: 1fr; }
+  .planGrid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "socialyze",
+  "version": "1.0.0",
+  "description": "Socialyze — AI Social Media Campaign Generator by Sourcesys Technologies",
+  "scripts": {
+    "backend": "cd backend && npm start",
+    "backend:dev": "cd backend && npm run dev"
+  },
+  "keywords": ["social-media", "ai", "campaign", "gemini", "streamlit"],
+  "author": "Sourcesys Technologies",
+  "license": "MIT"
+}
