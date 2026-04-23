@@ -3,8 +3,8 @@
  * ========================
  * POST /audience-targeting
  *
- * Generates 3 deeply psychographic, strategy-grade audience personas via Gemini.
- * Uses callGeminiJSON (with retry) for reliable structured output.
+ * Generates 3 deeply psychographic, strategy-grade audience personas via Groq.
+ * Uses callGroqJSON for reliable structured output.
  *
  * Team   : Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
  * Company: Sourcesys Technologies
@@ -21,109 +21,32 @@ const REQUIRED = [
 
 // ── Prompt builder ─────────────────────────────────────────────────
 function buildPrompt(d) {
-  return `You are a consumer psychologist and growth strategist.
-Generate DEEP, REALISTIC audience personas that feel like REAL PEOPLE — not demographic buckets.
+  return `You are an audience research strategist. Generate 3 distinct, psychographic-rich personas for ${d.brand_name}.
 
-DO NOT:
-- Give generic personas like "tech-savvy millennials who love social media"
-- Use vague descriptions like "tech-savvy users" or "young professionals"
-- Sound like a textbook or a marketing course slide
-- Repeat the same motivation or fear across personas
-- Use words like "leveraging", "holistic", "dynamic", "cutting-edge"
+Brand: ${d.brand_name} | Product: ${d.product_or_service} | Goal: ${d.campaign_objective}
+Region: ${d.region} | Industry: ${d.industry} | Age: ${d.age_group} | Type: ${d.customer_type}
+Core pain: ${d.pain_points}
 
-DO:
-- Include real motivations, fears, and daily behaviors specific to ${d.region} and ${d.industry}
-- Name specific apps, content formats, and creators this persona actually engages with
-- Describe how they think BEFORE buying, DURING consideration, and what makes them walk away
-- Make each persona feel like someone you could meet at a coffee shop in ${d.region}
-- Use insights that directly inform what to post, when, and how to write it
+Rules: No generic archetypes. Each persona = a real person in ${d.region}. Different motivations, fears, platforms per persona. No buzzwords.
 
-INPUT:
-Brand         : ${d.brand_name}
-Product       : ${d.product_or_service}
-Objective     : ${d.campaign_objective}
-Region        : ${d.region}
-Industry      : ${d.industry}
-Age Group     : ${d.age_group}
-Pain Points   : ${d.pain_points}
-Customer Type : ${d.customer_type}
+For each persona:
+- persona_name: "[First name] — [Psychological archetype]" (e.g. "Meera — The Quietly Burnt-Out Overachiever")
+- description: 2 sentences — their life, their specific frustration with ${d.industry}
+- motivations: 3 identity-driven desires (not product features)
+- pain_points: 3 visceral friction moments tied to "${d.pain_points}"
+- behavior: 1 paragraph — platform habits, what they save/share/lurk, when they scroll
+- content_preferences: 3 specific formats they stop for (not just "Reels" — be precise)
+- buying_trigger: the single scroll-breaking moment that makes them act
 
-Generate exactly 3 personas. Each persona must have these exact fields:
-
-persona_name:
-  First name + archetype in one line. The archetype should reveal their psychology.
-  Good: "Meera — The Quietly Burnt-Out Overachiever"
-  Good: "Rohan — The Sceptic Who Wants to Be Proven Wrong"
-  Bad: "Persona 1 — Working Professional"
-
-description:
-  Who they actually are as a person. 2-3 sentences about their life, not their demographics.
-  Mention their daily frustrations, their scroll habits at night, their specific relationship
-  with ${d.industry} right now. Write it like you're describing a real friend, not a survey respondent.
-
-motivations:
-  Array of exactly 3 specific motivations. These reveal what they WANT TO BECOME or FEEL — not features.
-  Make them emotional and identity-driven, not rational.
-  Bad: "They want a good product"
-  Good: "To stop feeling like they're always 3 steps behind everyone else in their field"
-
-pain_points:
-  Array of exactly 3 specific frustrations tied to ${d.pain_points}.
-  Make them visceral. Describe the actual moment of friction, not the abstract problem.
-  Bad: "Cost is too high"
-  Good: "Spends 40 minutes every morning doing something ${d.product_or_service} could automate in 30 seconds"
-
-behavior:
-  How they actually behave online — what they do at 11pm, what they share, what they lurk on.
-  Mention specific platform behaviors: Stories vs Feed, what they save vs share, do they comment or just lurk?
-  One paragraph. Specific enough that a content team could write for this person immediately.
-
-content_preferences:
-  Array of 3-5 specific content formats this persona actually stops for.
-  Not just "Reels" — say "15-second before/after Reels with no voiceover and on-screen text" or
-  "Twitter/X threads with numbered lists that give tactical advice, not motivation"
-
-buying_trigger:
-  The single moment that makes THIS person take action — not a discount, not a feature.
-  What breaks their scroll and makes them tap "Buy" or "Sign Up"?
-  It must connect to their specific fear or desire, not a generic marketing claim.
-
-Return ONLY valid JSON. No markdown. No explanation. No extra keys. Start with { and end with }.
-
+Return ONLY valid JSON. Start { end }.
 {
   "personas": [
-    {
-      "persona_name": "",
-      "description": "",
-      "motivations": ["", "", ""],
-      "pain_points": ["", "", ""],
-      "behavior": "",
-      "content_preferences": ["", "", ""],
-      "buying_trigger": ""
-    },
-    {
-      "persona_name": "",
-      "description": "",
-      "motivations": ["", "", ""],
-      "pain_points": ["", "", ""],
-      "behavior": "",
-      "content_preferences": ["", "", ""],
-      "buying_trigger": ""
-    },
-    {
-      "persona_name": "",
-      "description": "",
-      "motivations": ["", "", ""],
-      "pain_points": ["", "", ""],
-      "behavior": "",
-      "content_preferences": ["", "", ""],
-      "buying_trigger": ""
-    }
+    {"persona_name":"","description":"","motivations":["","",""],"pain_points":["","",""],"behavior":"","content_preferences":["","",""],"buying_trigger":""}
   ]
 }`;
 }
 
-// ── Fallback (if Gemini is unavailable) ───────────────────────────
+// ── Fallback (if Groq is unavailable) ─────────────────────────────
 function buildFallback(d) {
   return {
     personas: [
@@ -166,27 +89,22 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(", ")}` });
     }
 
-    const data          = req.body;
-    const callGeminiJSON = res.locals.callGeminiJSON;
-    let parsed           = null;
+    const data         = req.body;
+    const callGroqJSON = res.locals.callGroqJSON || res.locals.callGeminiJSON;
+    let parsed         = null;
 
-    if (typeof callGeminiJSON === "function") {
-      parsed = await callGeminiJSON(buildPrompt(data), {
+    if (typeof callGroqJSON === "function") {
+      parsed = await callGroqJSON(buildPrompt(data), {
         temperature: TEMPERATURE_PRESETS.strategic,
-        maxTokens:   4096,
+        maxTokens:   1800,
       });
-    } else if (typeof res.locals.callGemini === "function") {
-      // Legacy fallback
-      const raw = await res.locals.callGemini(buildPrompt(data));
-      if (raw) {
-        try { parsed = JSON.parse(raw.replace(/```json|```/gi, "").trim()); }
-        catch { console.warn("[audience-targeting] JSON parse failed."); }
-      }
     }
 
-    if (!parsed) parsed = buildFallback(data);
+    if (!parsed) {
+      console.warn("[audience-targeting] Groq returned null. Using domain-specific fallback.");
+      parsed = buildFallback(data);
+    }
 
-    const KEYS = ["persona_name", "description", "motivations", "pain_points", "behavior", "content_preferences", "buying_trigger"];
     const personas = (parsed.personas || []).slice(0, 3).map(p => {
       const out = {};
       out.persona_name         = String(p.persona_name  || "");

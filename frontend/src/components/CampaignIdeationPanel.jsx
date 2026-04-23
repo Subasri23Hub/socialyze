@@ -67,19 +67,40 @@ export default function CampaignIdeationPanel({ onClose, onSaved, onNoBrief, sha
     try {
       let data = null
 
-      // ── Step 1: Try backend (Gemini cascade) ─────────────────────────────
+      // ── Step 1: Try backend (Groq) ──────────────────────────────────────
       try {
         const res = await fetch('http://localhost:3000/campaign-ideation', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(form),
         })
-        if (res.ok) data = await res.json()
-      } catch (_) { /* backend unavailable — try Gemini direct */ }
+        if (res.ok) {
+          const raw = await res.json()
+          // Backend returns { campaigns, campaign_ideas } — normalise to campaign_ideas for the UI
+          if (!raw.campaign_ideas && raw.campaigns) raw.campaign_ideas = raw.campaigns
+          if (raw.campaign_ideas) {
+            raw.campaign_ideas = raw.campaign_ideas.map(c => ({
+              ...c,
+              idea_title:         c.idea_title         || c.title        || '',
+              tagline:            c.tagline            || '',
+              big_idea:           c.big_idea           || c.idea         || '',
+              cultural_hook:      c.cultural_hook      || c.why_it_works || '',
+              platform_execution: c.platform_execution || c.execution    || '',
+              sample_post:        c.sample_post        || '',
+              viral_mechanism:    c.viral_mechanism    || '',
+              influencer_strategy:c.influencer_strategy|| '',
+              success_metric:     c.success_metric     || '',
+              why_it_wins:        c.why_it_wins        || '',
+              hashtag_breakdown:  c.hashtag_breakdown  || [],
+            }))
+          }
+          data = raw
+        }
+      } catch (_) { /* backend unavailable — try Groq direct */ }
 
-      // ── Step 2: Try Gemini direct from browser ────────────────────────────
+      // ── Step 2: Try Groq direct from browser ──────────────────────────────
       if (!data) {
-        const prompt = `You are the Executive Creative Director at Wieden+Kennedy / BBDO / Ogilvy — the person who greenlit "Just Do It", "Think Different", and "Share a Coke". You've never produced a forgettable campaign in your career. You don't do safe. You do iconic.
+        const prompt = `You are the Executive Creative Director at a world-class agency. Generate 5 radically distinct campaign concepts for ${form.brand_name}.
 
 CAMPAIGN BRIEF:
 - Brand          : ${form.brand_name}
@@ -90,52 +111,29 @@ CAMPAIGN BRIEF:
 - Season/Event   : ${form.season_or_event}
 - Platform Focus : ${form.platform_focus}
 
-YOUR MISSION: Generate 5 radically distinct campaign concepts. Each one should be able to stand alone as a multi-month integrated campaign. They should be so different from each other that a client would struggle to choose.
+Generate EXACTLY 5 ideas, from safe-but-smart to chaotic-good. Return ONLY valid JSON, start with { end with }.
+{
+  "campaign_ideas": [
+    {
+      "idea_title": "campaign name",
+      "tagline": "one punchy line",
+      "big_idea": "3-4 sentence creative concept",
+      "cultural_hook": "why this connects culturally right now",
+      "platform_execution": "how it runs on ${form.platform_focus}",
+      "sample_post": "the actual first post copy, ready to publish",
+      "viral_mechanism": "what makes it spread",
+      "influencer_strategy": "how influencers fit in",
+      "success_metric": "the one KPI that proves this worked",
+      "why_it_wins": "the strategic reason this beats the competition",
+      "hashtag_breakdown": [
+        { "tag": "#example", "explanation": "why this tag", "when_to_post": "timing guidance" }
+      ]
+    }
+  ]
+}`
 
-For each of the 5 campaign ideas, provide: idea_title, tagline, big_idea, cultural_hook, platform_execution, sample_post, viral_mechanism, influencer_strategy, success_metric, why_it_wins, and hashtag_breakdown (array of objects with tag, explanation, when_to_post).
-
-Make ideas 1–5 progressively bolder. Idea 1 is "safe but smart." Idea 5 is "this might get us fired but it will definitely go viral."`
-
-        const schema = {
-          type: 'OBJECT',
-          properties: {
-            campaign_ideas: {
-              type: 'ARRAY',
-              items: {
-                type: 'OBJECT',
-                properties: {
-                  idea_title:          { type: 'STRING' },
-                  tagline:             { type: 'STRING' },
-                  big_idea:            { type: 'STRING' },
-                  cultural_hook:       { type: 'STRING' },
-                  platform_execution:  { type: 'STRING' },
-                  sample_post:         { type: 'STRING' },
-                  viral_mechanism:     { type: 'STRING' },
-                  influencer_strategy: { type: 'STRING' },
-                  success_metric:      { type: 'STRING' },
-                  why_it_wins:         { type: 'STRING' },
-                  hashtag_breakdown: {
-                    type: 'ARRAY',
-                    items: {
-                      type: 'OBJECT',
-                      properties: {
-                        tag:          { type: 'STRING' },
-                        explanation:  { type: 'STRING' },
-                        when_to_post: { type: 'STRING' },
-                      },
-                      required: ['tag', 'explanation', 'when_to_post'],
-                    },
-                  },
-                },
-                required: ['idea_title', 'tagline', 'big_idea', 'cultural_hook', 'platform_execution', 'sample_post', 'viral_mechanism', 'influencer_strategy', 'success_metric', 'why_it_wins', 'hashtag_breakdown'],
-              },
-            },
-          },
-          required: ['campaign_ideas'],
-        }
-
-        data = await generateWithFallback(prompt, schema, {
-          gemini: { temperature: 1.0, maxOutputTokens: 8192 },
+        data = await generateWithFallback(prompt, null, {
+          groq: { temperature: 1.0, maxOutputTokens: 1600 },
         })
       }
 
@@ -194,7 +192,7 @@ Make ideas 1–5 progressively bolder. Idea 1 is "safe but smart." Idea 5 is "th
       <div className={styles.hdr}>
         <div>
           <div className={styles.title}>Campaign Ideation</div>
-          <div className={styles.sub}>5 distinct campaign concepts — Cannes-level creative thinking via Gemini</div>
+          <div className={styles.sub}>5 distinct campaign concepts — Cannes-level creative thinking via Groq</div>
         </div>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
       </div>

@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from './supabaseClient'
 
-import Sidebar               from './components/Sidebar.jsx'
-import Dashboard             from './components/Dashboard.jsx'
-import ActiveCampaignsPage   from './pages/ActiveCampaignsPage.jsx'
-import CampaignWorkspace     from './pages/CampaignWorkspace.jsx'
-import CampaignBriefPage     from './pages/CampaignBriefPage.jsx'
-import FavouritesPage        from './pages/FavouritesPage.jsx'
-import ArchivedPage          from './pages/ArchivedPage.jsx'
-import SharedWorkspacesPage  from './pages/SharedWorkspacesPage.jsx'
-import TeamPage              from './pages/TeamPage.jsx'
-import ContentPlannerPage    from './pages/ContentPlannerPage.jsx'
-import BrandsPage            from './pages/BrandsPage.jsx'
-import CreatorStudioPage     from './pages/CreatorStudioPage.jsx'
-import ComplianceGuardPage   from './pages/ComplianceGuardPage.jsx'
-import Auth                  from './components/Auth.jsx'
+import Sidebar  from './components/Sidebar.jsx'
+import Auth     from './components/Auth.jsx'
+import styles   from './App.module.css'
 
-import styles from './App.module.css'
+// ── Lazy-loaded pages — each page's JS is only fetched when first visited ──
+const Dashboard            = lazy(() => import('./components/Dashboard.jsx'))
+const ActiveCampaignsPage  = lazy(() => import('./pages/ActiveCampaignsPage.jsx'))
+const CampaignWorkspace    = lazy(() => import('./pages/CampaignWorkspace.jsx'))
+const CampaignBriefPage    = lazy(() => import('./pages/CampaignBriefPage.jsx'))
+const FavouritesPage       = lazy(() => import('./pages/FavouritesPage.jsx'))
+const ArchivedPage         = lazy(() => import('./pages/ArchivedPage.jsx'))
+const SharedWorkspacesPage = lazy(() => import('./pages/SharedWorkspacesPage.jsx'))
+const TeamPage             = lazy(() => import('./pages/TeamPage.jsx'))
+const ContentPlannerPage   = lazy(() => import('./pages/ContentPlannerPage.jsx'))
+const BrandsPage           = lazy(() => import('./pages/BrandsPage.jsx'))
+const CreatorStudioPage    = lazy(() => import('./pages/CreatorStudioPage.jsx'))
+const ComplianceGuardPage  = lazy(() => import('./pages/ComplianceGuardPage.jsx'))
 
 export default function App() {
   const [session,     setSession]     = useState(undefined) // undefined = not yet resolved
@@ -67,53 +68,55 @@ export default function App() {
         userEmail={session.user?.email}
       />
 
-      {workspaceId ? (
-        <CampaignWorkspace
-          campaignId={workspaceId}
-          onBack={handleBack}
-        />
-      ) : activeNav === 'brief' ? (
-        <CampaignBriefPage onGoToServices={goToServices} />
-      ) : activeNav === 'active' ? (
-        <main className={styles.mainPad}>
-          <ActiveCampaignsPage onOpenWorkspace={openWorkspace} />
-        </main>
-      ) : activeNav === 'planner' ? (
-        <ContentPlannerPage />
-      ) : activeNav === 'fav' ? (
-        <main className={styles.mainPad}>
-          <FavouritesPage onOpenWorkspace={openWorkspace} />
-        </main>
-      ) : activeNav === 'archived' ? (
-        <main className={styles.mainPad}>
-          <ArchivedPage onOpenWorkspace={openWorkspace} />
-        </main>
-      ) : activeNav === 'shared' ? (
-        <main className={styles.mainPad}>
-          <SharedWorkspacesPage onOpenWorkspace={openWorkspace} />
-        </main>
-      ) : activeNav === 'brands' ? (
-        <main className={styles.mainPad}>
-          <BrandsPage />
-        </main>
-      ) : activeNav === 'team' ? (
-        <main className={styles.mainPad}>
-          <TeamPage userEmail={session.user?.email} />
-        </main>
-      ) : activeNav === 'creator' ? (
-        <main className={styles.mainPad}>
-          <CreatorStudioPage />
-        </main>
-      ) : activeNav === 'compliance' ? (
-        <main className={styles.mainPad}>
-          <ComplianceGuardPage />
-        </main>
-      ) : (
-        <Dashboard
-          onOpenWorkspace={openWorkspace}
-          onGoToBrief={goToBrief}
-        />
-      )}
+      <Suspense fallback={<div className={styles.pageSpinner}><div className={styles.bootSpinner} /></div>}>
+        {workspaceId ? (
+          <CampaignWorkspace
+            campaignId={workspaceId}
+            onBack={handleBack}
+          />
+        ) : activeNav === 'brief' ? (
+          <CampaignBriefPage onGoToServices={goToServices} />
+        ) : activeNav === 'active' ? (
+          <main className={styles.mainPad}>
+            <ActiveCampaignsPage onOpenWorkspace={openWorkspace} />
+          </main>
+        ) : activeNav === 'planner' ? (
+          <ContentPlannerPage />
+        ) : activeNav === 'fav' ? (
+          <main className={styles.mainPad}>
+            <FavouritesPage onOpenWorkspace={openWorkspace} />
+          </main>
+        ) : activeNav === 'archived' ? (
+          <main className={styles.mainPad}>
+            <ArchivedPage onOpenWorkspace={openWorkspace} />
+          </main>
+        ) : activeNav === 'shared' ? (
+          <main className={styles.mainPad}>
+            <SharedWorkspacesPage onOpenWorkspace={openWorkspace} />
+          </main>
+        ) : activeNav === 'brands' ? (
+          <main className={styles.mainPad}>
+            <BrandsPage />
+          </main>
+        ) : activeNav === 'team' ? (
+          <main className={styles.mainPad}>
+            <TeamPage userEmail={session.user?.email} />
+          </main>
+        ) : activeNav === 'creator' ? (
+          <main className={styles.mainPad}>
+            <CreatorStudioPage />
+          </main>
+        ) : activeNav === 'compliance' ? (
+          <main className={styles.mainPad}>
+            <ComplianceGuardPage />
+          </main>
+        ) : (
+          <Dashboard
+            onOpenWorkspace={openWorkspace}
+            onGoToBrief={goToBrief}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }

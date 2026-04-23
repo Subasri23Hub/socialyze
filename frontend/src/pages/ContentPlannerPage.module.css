@@ -192,6 +192,12 @@
   cursor: grab;
   transition: box-shadow 0.15s, opacity 0.2s, transform 0.15s;
   position: relative;
+  isolation: auto;
+}
+
+.card:has(.cardMenu),
+.cardMenuActive {
+  z-index: 100;
 }
 
 .card:hover {
@@ -225,6 +231,11 @@
 .cardMenuWrap {
   position: relative;
   flex-shrink: 0;
+  z-index: 1;
+}
+
+.cardMenuWrap:has(.cardMenu) {
+  z-index: 9999;
 }
 
 .cardMenuBtn {
@@ -249,7 +260,7 @@
   border-radius: 10px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.12);
   min-width: 168px;
-  z-index: 50;
+  z-index: 9999;
   overflow: hidden;
   animation: fadeUp 0.12s ease;
 }

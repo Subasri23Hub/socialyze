@@ -6,7 +6,7 @@
     "backend": "cd backend && npm start",
     "backend:dev": "cd backend && npm run dev"
   },
-  "keywords": ["social-media", "ai", "campaign", "gemini", "streamlit"],
+  "keywords": ["social-media", "ai", "campaign", "groq", "streamlit"],
   "author": "Sourcesys Technologies",
   "license": "MIT"
 }

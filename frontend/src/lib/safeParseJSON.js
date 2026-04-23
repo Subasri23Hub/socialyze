@@ -1,12 +1,10 @@
 /**
  * safeParseJSON.js
  * ─────────────────────────────────────────────────────────────
- * NOTE: With responseMimeType:"application/json" set in all Gemini
- * API calls, Gemini returns guaranteed-valid JSON and this function
- * is only a thin safety wrapper for edge cases.
+ * Safely parses the raw text response from Groq into a JSON object.
  *
- * Still handles:
- *   • Markdown fences in case an older model ignores the mime type
+ * Handles:
+ *   • Markdown fences (```json ... ```) that the model may wrap around output
  *   • Leading/trailing prose around the JSON block
  *   • Trailing commas before } or ]
  *   • Literal newlines/tabs inside strings
@@ -22,7 +20,7 @@ export function safeParseJSON(raw) {
   const s = text.indexOf('{')
   const e = text.lastIndexOf('}')
   if (s === -1 || e === -1 || e <= s) {
-    throw new Error('No JSON object found in Gemini response.')
+    throw new Error('No JSON object found in Groq response.')
   }
   text = text.slice(s, e + 1)
 

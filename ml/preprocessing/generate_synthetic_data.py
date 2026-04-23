@@ -20,8 +20,7 @@ Team   : Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
 Company: Sourcesys Technologies
 
 Usage:
-    # Set your API key in .env  →  GOOGLE_API_KEY=your_key_here
-    python generate_synthetic_data.py
+    python ml/preprocessing/generate_synthetic_data.py
 """
 
 import os
@@ -39,7 +38,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY", "")
 
 # ── Paths ──────────────────────────────────────────────────────────
-BASE     = os.path.dirname(os.path.abspath(__file__))
+# ml/preprocessing/generate_synthetic_data.py → go up 3 levels to reach project root
+BASE     = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROC     = os.path.join(BASE, "data", "processed", "text")
 MASTER   = os.path.join(PROC, "master_dataset.csv")
 OUT_FILE = os.path.join(PROC, "gemini_synthetic_posts.csv")
@@ -112,7 +112,7 @@ def main() -> None:
                         contents=build_prompt(platform, tone, audience),
                         config=types.GenerateContentConfig(temperature=0.9, max_output_tokens=1000),
                     )
-                    raw  = re.sub(r"```json|```", "", response.text.strip()).strip()
+                    raw   = re.sub(r"```json|```", "", response.text.strip()).strip()
                     posts = json.loads(raw)
 
                     for post in posts:
@@ -138,7 +138,6 @@ def main() -> None:
 
                 time.sleep(RATE_LIMIT_WAIT)
 
-    # ── Save synthetic dataset ─────────────────────────────────────
     print(f"\n{'=' * 65}")
     print(f"  Posts generated: {len(all_posts)}  |  Failed calls: {failed}")
     print(f"{'=' * 65}")
@@ -151,7 +150,6 @@ def main() -> None:
     df_synthetic.to_csv(OUT_FILE, index=False, encoding="utf-8-sig", errors="replace")
     print(f"\n✓ Saved: {OUT_FILE}")
 
-    # ── Merge with master dataset ──────────────────────────────────
     common_cols = ["platform", "tone", "audience", "caption", "hashtags", "cta", "engagement_label", "source", "content_type"]
     for col in common_cols:
         if col not in df_synthetic.columns:

@@ -37,9 +37,6 @@ export default function Auth() {
   /* ── Google OAuth ── */
   async function handleGoogle() {
     reset(); setLoading(true)
-    // redirectTo must match EXACTLY what you added in:
-    // Supabase Dashboard → Authentication → URL Configuration → Redirect URLs
-    // e.g. http://localhost:5173
     const redirectTo = window.location.origin
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -47,7 +44,7 @@ export default function Auth() {
         redirectTo,
         queryParams: {
           access_type: 'offline',
-          prompt: 'select_account',  // always show the Google account picker
+          prompt: 'select_account',
         },
       },
     })
@@ -204,7 +201,7 @@ export default function Auth() {
         </div>
       </div>
 
-      <p className={styles.footer}>© 2024 Socialyze. All rights reserved.</p>
+      <p className={styles.footer}>© 2026 Socialyze. All rights reserved.</p>
     </div>
   )
 }

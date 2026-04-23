@@ -9,7 +9,7 @@
  *   - All content must be polished, professional, and immediately usable
  *   - Output must feel intentional — never indicate failure to the user
  *
- * Usage: Called automatically when Gemini exhausts all 3 retry attempts.
+ * Usage: Called automatically when Groq is unavailable or returns null.
  *
  * Team   : Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
  * Company: Sourcesys Technologies

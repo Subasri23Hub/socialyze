@@ -1,25 +1,18 @@
 /**
  * AI Social Media Campaign Generator — Backend Configuration
  * ===========================================================
- * Gemini model parameters and platform/tone/campaign-type
+ * Groq model parameters and platform/tone/campaign-type
  * prompt-engineering helpers.
  */
 
 require("dotenv").config();
 
-// ── Gemini model configuration ─────────────────────────────────────
-const GEMINI_CONFIG = {
-  modelName:        process.env.GEMINI_MODEL                              || "gemini-2.5-flash",
-  temperature:      parseFloat(process.env.GEMINI_TEMPERATURE)            || 0.9,
-  topK:             parseInt(process.env.GEMINI_TOP_K)                    || 40,
-  topP:             parseFloat(process.env.GEMINI_TOP_P)                  || 0.95,
-  maxOutputTokens:  parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS)        || 8192,
-  safetySettings: [
-    { category: "HARM_CATEGORY_HARASSMENT",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-    { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-  ],
+// ── Groq model configuration ────────────────────────────────────────
+const GROQ_CONFIG = {
+  modelName:        process.env.GROQ_MODEL           || "llama-3.1-8b-instant",
+  temperature:      parseFloat(process.env.GROQ_TEMPERATURE)            || 0.9,
+  topP:             parseFloat(process.env.GROQ_TOP_P)                  || 0.95,
+  maxOutputTokens:  parseInt(process.env.GROQ_MAX_OUTPUT_TOKENS)        || 1200,
 };
 
 // ── Per-task temperature presets ────────────────────────────────────
@@ -68,7 +61,9 @@ const CAMPAIGN_GUIDANCE = {
 
 // ── Exports ────────────────────────────────────────────────────────
 module.exports = {
-  GEMINI_CONFIG,
+  GROQ_CONFIG,
+  // Legacy alias so any code that imports GROK_CONFIG still works
+  GROK_CONFIG: GROQ_CONFIG,
   TEMPERATURE_PRESETS,
 
   /**

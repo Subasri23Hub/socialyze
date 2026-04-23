@@ -10,9 +10,11 @@
  * ────────
  *  • Three-column Kanban: Planned → In Progress → Completed
  *  • Add Task modal: title, date (calendar), time (clock), task type, platform, description
+ *  • Edit Task modal: pre-filled with existing task data
+ *  • Three-dot menu: Move to column | Edit | Delete
  *  • Drag-ready column structure (draggable attribute set; full DnD can be wired in)
  *  • Status chip on cards; date + time displayed
- *  • Supabase CRUD — insert, fetch, update status, delete
+ *  • Supabase CRUD — insert, fetch, update status, update fields, delete
  *  • Consistent with existing app design tokens (colors, fonts, border-radius, shadows)
  */
 
@@ -69,17 +71,18 @@ export default function ContentPlannerPage() {
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState('')
   const [showModal,   setShowModal]   = useState(false)
+  const [editTask,    setEditTask]    = useState(null)   // task being edited (null = add mode)
   const [form,        setForm]        = useState(EMPTY_FORM)
   const [saving,      setSaving]      = useState(false)
   const [formError,   setFormError]   = useState('')
   const [deletingId,  setDeletingId]  = useState(null)
-  const [dragOver,    setDragOver]    = useState(null) // colId being dragged over
+  const [dragOver,    setDragOver]    = useState(null)
   const [calMonth,    setCalMonth]    = useState(() => {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
   })
 
-  // ── Fetch tasks (initial load only — no spinner on mutations) ─
+  // ── Fetch tasks ──────────────────────────────────────────────
   const loadTasks = useCallback(async (opts = {}) => {
     if (!opts.silent) setLoading(true)
     setError('')
@@ -100,12 +103,46 @@ export default function ContentPlannerPage() {
 
   useEffect(() => { loadTasks() }, [loadTasks])
 
-  // ── Form handlers ────────────────────────────────────────────
+  // ── Open Add modal ───────────────────────────────────────────
+  function openAddModal() {
+    setEditTask(null)
+    setForm(EMPTY_FORM)
+    setFormError('')
+    const now = new Date()
+    setCalMonth({ year: now.getFullYear(), month: now.getMonth() })
+    setShowModal(true)
+  }
+
+  // ── Open Edit modal ──────────────────────────────────────────
+  function openEditModal(task) {
+    setEditTask(task)
+    setForm({
+      title:       task.title       || '',
+      task_type:   task.task_type   || '',
+      platform:    task.platform    || '',
+      description: task.description || '',
+      date:        task.date        || '',
+      time:        task.time        || '',
+    })
+    setFormError('')
+    // Set calendar month to the task's date
+    if (task.date) {
+      const parts = task.date.split('-')
+      setCalMonth({ year: parseInt(parts[0]), month: parseInt(parts[1]) - 1 })
+    } else {
+      const now = new Date()
+      setCalMonth({ year: now.getFullYear(), month: now.getMonth() })
+    }
+    setShowModal(true)
+  }
+
+  // ── Form field handler ───────────────────────────────────────
   function handleField(field, value) {
     setForm(f => ({ ...f, [field]: value }))
     setFormError('')
   }
 
+  // ── Submit: Add or Edit ──────────────────────────────────────
   async function handleSubmit() {
     if (!form.title.trim())    { setFormError('Task title is required.'); return }
     if (!form.date)            { setFormError('Please select a date.'); return }
@@ -115,37 +152,62 @@ export default function ContentPlannerPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { error: err } = await supabase.from('content_calendar').insert({
-      user_id:     user.id,
-      title:       form.title.trim(),
-      task_type:   form.task_type.trim(),
-      platform:    form.platform,
-      description: form.description.trim(),
-      date:        form.date,
-      time:        form.time,
-      status:      'Planned',
-    })
+    if (editTask) {
+      // ── UPDATE existing task ──
+      const { error: err } = await supabase
+        .from('content_calendar')
+        .update({
+          title:       form.title.trim(),
+          task_type:   form.task_type.trim(),
+          platform:    form.platform,
+          description: form.description.trim(),
+          date:        form.date,
+          time:        form.time,
+        })
+        .eq('id', editTask.id)
 
-    setSaving(false)
-    if (err) { setFormError(err.message); return }
+      setSaving(false)
+      if (err) { setFormError(err.message); return }
+
+      // Optimistically update local state
+      setTasks(prev => prev.map(t =>
+        t.id === editTask.id
+          ? { ...t, title: form.title.trim(), task_type: form.task_type.trim(),
+              platform: form.platform, description: form.description.trim(),
+              date: form.date, time: form.time }
+          : t
+      ))
+    } else {
+      // ── INSERT new task ──
+      const { error: err } = await supabase.from('content_calendar').insert({
+        user_id:     user.id,
+        title:       form.title.trim(),
+        task_type:   form.task_type.trim(),
+        platform:    form.platform,
+        description: form.description.trim(),
+        date:        form.date,
+        time:        form.time,
+        status:      'Planned',
+      })
+
+      setSaving(false)
+      if (err) { setFormError(err.message); return }
+      loadTasks({ silent: true })
+    }
 
     setShowModal(false)
+    setEditTask(null)
     setForm(EMPTY_FORM)
-    setCalMonth(() => { const now = new Date(); return { year: now.getFullYear(), month: now.getMonth() } })
-    loadTasks({ silent: true })
   }
 
-  // ── Move task — OPTIMISTIC: update local state instantly, persist in background ──
+  // ── Move task — OPTIMISTIC ───────────────────────────────────
   async function moveTask(task, newStatus) {
     if (task.status === newStatus) return
-    // 1. Instantly update local state — zero lag
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
-    // 2. Persist to Supabase in background
     const { error: err } = await supabase
       .from('content_calendar')
       .update({ status: newStatus })
       .eq('id', task.id)
-    // 3. Only re-fetch from DB if something went wrong
     if (err) {
       setError('Failed to move task — please refresh.')
       loadTasks({ silent: true })
@@ -155,7 +217,6 @@ export default function ContentPlannerPage() {
   // ── Delete task — OPTIMISTIC ─────────────────────────────────
   async function deleteTask(id) {
     setDeletingId(id)
-    // Instantly remove from local state
     setTasks(prev => prev.filter(t => t.id !== id))
     const { error: err } = await supabase.from('content_calendar').delete().eq('id', id)
     setDeletingId(null)
@@ -165,40 +226,28 @@ export default function ContentPlannerPage() {
     }
   }
 
-  // ── Drag-drop (HTML5 native) ─────────────────────────────────
+  // ── Drag-drop ────────────────────────────────────────────────
   const dragId = useRef(null)
 
   function onDragStart(e, taskId) {
     dragId.current = taskId
     e.dataTransfer.effectAllowed = 'move'
   }
-
-  function onDragEnd() {
-    setDragOver(null)
-  }
-
+  function onDragEnd()          { setDragOver(null) }
   function onDrop(e, colId) {
-    e.preventDefault()
-    setDragOver(null)
-    const id = dragId.current
-    if (!id) return
+    e.preventDefault(); setDragOver(null)
+    const id = dragId.current; if (!id) return
     const task = tasks.find(t => t.id === id)
     if (!task || task.status === colId) return
     moveTask(task, colId)
   }
-
   function onDragOver(e, colId) {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOver(colId)
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver(colId)
   }
-
   function onDragLeave(e) {
-    // Only clear if leaving the column entirely (not entering a child)
     if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(null)
   }
 
-  // ── Column stats ─────────────────────────────────────────────
   function colTasks(colId) { return tasks.filter(t => t.status === colId) }
 
   // ─────────────────────────────────────────────────────────────
@@ -213,7 +262,7 @@ export default function ContentPlannerPage() {
           <h2 className={styles.pageTitle}>Content Planner</h2>
           <p className={styles.pageSub}>Plan, track, and manage your content tasks across all platforms.</p>
         </div>
-        <button className={styles.addBtn} onClick={() => { setShowModal(true); setFormError(''); setForm(EMPTY_FORM) }}>
+        <button className={styles.addBtn} onClick={openAddModal}>
           <PlusIcon /> Add Task
         </button>
       </div>
@@ -228,8 +277,6 @@ export default function ContentPlannerPage() {
           <span>Loading tasks…</span>
         </div>
       ) : (
-
-        /* Kanban Board */
         <div className={styles.board}>
           {COLUMNS.map(col => {
             const colItems = colTasks(col.id)
@@ -241,7 +288,6 @@ export default function ContentPlannerPage() {
                 onDragLeave={onDragLeave}
                 onDrop={e => onDrop(e, col.id)}
               >
-                {/* Column header */}
                 <div className={styles.colHdr}>
                   <div className={styles.colHdrLeft}>
                     <span className={styles.colDot} style={{ background: col.color }} />
@@ -252,7 +298,6 @@ export default function ContentPlannerPage() {
                   </span>
                 </div>
 
-                {/* Cards */}
                 <div className={styles.cardList}>
                   {colItems.length === 0 ? (
                     <div className={styles.emptyCol}>
@@ -264,9 +309,9 @@ export default function ContentPlannerPage() {
                       <TaskCard
                         key={task.id}
                         task={task}
-                        col={col}
                         columns={COLUMNS}
                         onMove={moveTask}
+                        onEdit={openEditModal}
                         onDelete={deleteTask}
                         deleting={deletingId === task.id}
                         onDragStart={onDragStart}
@@ -281,9 +326,10 @@ export default function ContentPlannerPage() {
         </div>
       )}
 
-      {/* Add Task Modal */}
+      {/* Add / Edit Task Modal */}
       {showModal && (
-        <AddTaskModal
+        <TaskModal
+          mode={editTask ? 'edit' : 'add'}
           form={form}
           formError={formError}
           saving={saving}
@@ -291,7 +337,7 @@ export default function ContentPlannerPage() {
           setCalMonth={setCalMonth}
           onChange={handleField}
           onSubmit={handleSubmit}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setEditTask(null) }}
         />
       )}
     </div>
@@ -301,11 +347,11 @@ export default function ContentPlannerPage() {
 // ─────────────────────────────────────────────────────────────
 // TaskCard
 // ─────────────────────────────────────────────────────────────
-function TaskCard({ task, col, columns, onMove, onDelete, deleting, onDragStart, onDragEnd }) {
+function TaskCard({ task, columns, onMove, onEdit, onDelete, deleting, onDragStart, onDragEnd }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [moving,   setMoving]   = useState(null)
   const menuRef = useRef(null)
 
-  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return
     function handle(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
@@ -315,14 +361,20 @@ function TaskCard({ task, col, columns, onMove, onDelete, deleting, onDragStart,
 
   const nextCols = columns.filter(c => c.id !== task.status)
 
+  async function handleMove(targetCol) {
+    setMenuOpen(false)
+    setMoving(targetCol.id)
+    await onMove(task, targetCol.id)
+    setMoving(null)
+  }
+
   return (
     <div
-      className={`${styles.card} ${deleting ? styles.cardDeleting : ''}`}
+      className={`${styles.card} ${deleting ? styles.cardDeleting : ''} ${menuOpen ? styles.cardMenuActive : ''}`}
       draggable
       onDragStart={e => onDragStart(e, task.id)}
       onDragEnd={onDragEnd}
     >
-      {/* Card top row */}
       <div className={styles.cardTop}>
         <div className={styles.cardTitle}>{task.title}</div>
         <div className={styles.cardMenuWrap} ref={menuRef}>
@@ -335,19 +387,33 @@ function TaskCard({ task, col, columns, onMove, onDelete, deleting, onDragStart,
           </button>
           {menuOpen && (
             <div className={styles.cardMenu}>
+              {/* Move options */}
               {nextCols.map(c => (
                 <button
                   key={c.id}
                   className={styles.cardMenuItem}
                   disabled={!!moving}
-                  onClick={() => { setMenuOpen(false); onMove(task, c.id) }}
+                  onClick={() => handleMove(c)}
                 >
                   <ArrowRightIcon />
                   Move to {c.label}
                   {moving === c.id && <SpinIcon />}
                 </button>
               ))}
+
               <div className={styles.cardMenuDivider} />
+
+              {/* Edit */}
+              <button
+                className={styles.cardMenuItem}
+                onClick={() => { setMenuOpen(false); onEdit(task) }}
+              >
+                <EditIcon /> Edit Task
+              </button>
+
+              <div className={styles.cardMenuDivider} />
+
+              {/* Delete */}
               <button
                 className={`${styles.cardMenuItem} ${styles.cardMenuDelete}`}
                 disabled={deleting}
@@ -360,49 +426,37 @@ function TaskCard({ task, col, columns, onMove, onDelete, deleting, onDragStart,
         </div>
       </div>
 
-      {/* Meta row: type + platform */}
       <div className={styles.cardMeta}>
-        {task.task_type && (
-          <span className={styles.typePill}>{task.task_type}</span>
-        )}
-        {task.platform && (
-          <span className={styles.platPill}>{task.platform}</span>
-        )}
+        {task.task_type && <span className={styles.typePill}>{task.task_type}</span>}
+        {task.platform  && <span className={styles.platPill}>{task.platform}</span>}
       </div>
 
-      {/* Description */}
       {task.description && (
         <p className={styles.cardDesc}>{task.description}</p>
       )}
 
-      {/* Date + Time footer */}
       <div className={styles.cardFooter}>
-        <span className={styles.cardDate}>
-          <CalIcon /> {formatDisplayDate(task.date)}
-        </span>
-        <span className={styles.cardTime}>
-          <ClockIcon /> {formatDisplayTime(task.time)}
-        </span>
+        <span className={styles.cardDate}><CalIcon /> {formatDisplayDate(task.date)}</span>
+        <span className={styles.cardTime}><ClockIcon /> {formatDisplayTime(task.time)}</span>
       </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────
-// AddTaskModal
+// TaskModal  (unified Add + Edit modal)
 // ─────────────────────────────────────────────────────────────
-function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange, onSubmit, onClose }) {
+function TaskModal({ mode, form, formError, saving, calMonth, setCalMonth, onChange, onSubmit, onClose }) {
+  const isEdit = mode === 'edit'
 
-  // Build calendar days
   const { year, month } = calMonth
-  const firstDay = new Date(year, month, 1).getDay() // 0=Sun
+  const firstDay    = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const MONTH_NAMES = ['January','February','March','April','May','June',
                        'July','August','September','October','November','December']
   const today = todayStr()
 
   const calDays = []
-  // empty cells before first day
   for (let i = 0; i < firstDay; i++) calDays.push(null)
   for (let d = 1; d <= daysInMonth; d++) calDays.push(d)
 
@@ -414,55 +468,44 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
   }
 
   function prevMonth() {
-    setCalMonth(c => {
-      if (c.month === 0) return { year: c.year - 1, month: 11 }
-      return { year: c.year, month: c.month - 1 }
-    })
+    setCalMonth(c => c.month === 0 ? { year: c.year - 1, month: 11 } : { year: c.year, month: c.month - 1 })
   }
   function nextMonth() {
-    setCalMonth(c => {
-      if (c.month === 11) return { year: c.year + 1, month: 0 }
-      return { year: c.year, month: c.month + 1 }
-    })
+    setCalMonth(c => c.month === 11 ? { year: c.year + 1, month: 0 } : { year: c.year, month: c.month + 1 })
   }
 
-  // Selected date for highlighting
-  const selectedDay = form.date
-    ? (() => {
-        const parts = form.date.split('-')
-        const y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2])
-        if (y === year && m === month) return d
-        return null
-      })()
-    : null
+  const selectedDay = form.date ? (() => {
+    const parts = form.date.split('-')
+    const y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2])
+    return (y === year && m === month) ? d : null
+  })() : null
 
-  // Today highlight
   const todayDay = (() => {
     const parts = today.split('-')
     const y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2])
-    if (y === year && m === month) return d
-    return null
+    return (y === year && m === month) ? d : null
   })()
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className={styles.modal}>
 
-        {/* Modal header */}
+        {/* Header */}
         <div className={styles.modalHdr}>
           <div>
-            <div className={styles.modalTitle}>Add Content Task</div>
-            <div className={styles.modalSub}>Plan a new task on your content calendar</div>
+            <div className={styles.modalTitle}>{isEdit ? 'Edit Content Task' : 'Add Content Task'}</div>
+            <div className={styles.modalSub}>
+              {isEdit ? 'Update the details of this task' : 'Plan a new task on your content calendar'}
+            </div>
           </div>
           <button className={styles.modalClose} onClick={onClose}><XIcon /></button>
         </div>
 
         <div className={styles.modalBody}>
 
-          {/* Left column: form fields */}
+          {/* Left: form fields */}
           <div className={styles.formCol}>
 
-            {/* Title */}
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Task Title <span className={styles.req}>*</span></label>
               <input
@@ -474,7 +517,6 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
               />
             </div>
 
-            {/* Task Type */}
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Task Type <span className={styles.req}>*</span></label>
               <input
@@ -485,7 +527,6 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
               />
             </div>
 
-            {/* Platform */}
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Platform</label>
               <select
@@ -498,7 +539,6 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
               </select>
             </div>
 
-            {/* Description */}
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Description</label>
               <textarea
@@ -510,7 +550,6 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
               />
             </div>
 
-            {/* Time picker */}
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Time <span className={styles.req}>*</span></label>
               <TimePicker value={form.time} onChange={v => onChange('time', v)} />
@@ -518,19 +557,15 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
 
           </div>
 
-          {/* Right column: calendar */}
+          {/* Right: calendar */}
           <div className={styles.calCol}>
             <label className={styles.fieldLabel}>Date <span className={styles.req}>*</span></label>
-
             <div className={styles.calWrap}>
-              {/* Month nav */}
               <div className={styles.calNav}>
                 <button className={styles.calNavBtn} onClick={prevMonth}><ChevronLeftIcon /></button>
                 <span className={styles.calMonthLabel}>{MONTH_NAMES[month]} {year}</span>
                 <button className={styles.calNavBtn} onClick={nextMonth}><ChevronRightIcon /></button>
               </div>
-
-              {/* Day-of-week headers */}
               <div className={styles.calGrid}>
                 {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
                   <div key={d} className={styles.calDow}>{d}</div>
@@ -549,8 +584,6 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
                   </div>
                 ))}
               </div>
-
-              {/* Selected date display */}
               {form.date && (
                 <div className={styles.calSelected}>
                   <CalIcon /> {formatDisplayDate(form.date)}
@@ -560,14 +593,17 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
           </div>
         </div>
 
-        {/* Form error */}
         {formError && <div className={styles.formError}><WarnIcon /> {formError}</div>}
 
-        {/* Modal footer */}
         <div className={styles.modalFooter}>
           <button className={styles.cancelBtn} onClick={onClose} disabled={saving}>Cancel</button>
           <button className={styles.saveBtn} onClick={onSubmit} disabled={saving}>
-            {saving ? <><SpinIcon /> Saving…</> : <><CheckIcon /> Add Task</>}
+            {saving
+              ? <><SpinIcon /> Saving…</>
+              : isEdit
+                ? <><CheckIcon /> Save Changes</>
+                : <><CheckIcon /> Add Task</>
+            }
           </button>
         </div>
       </div>
@@ -576,18 +612,16 @@ function AddTaskModal({ form, formError, saving, calMonth, setCalMonth, onChange
 }
 
 // ─────────────────────────────────────────────────────────────
-// TimePicker: interactive clock-style HH:MM selector
+// TimePicker
 // ─────────────────────────────────────────────────────────────
 function TimePicker({ value, onChange }) {
-  // Parse current value
-  const [hour, setHour] = useState(() => value ? parseInt(value.split(':')[0]) : 9)
+  const [hour, setHour] = useState(() => value ? parseInt(value.split(':')[0]) % 12 || 12 : 9)
   const [min,  setMin]  = useState(() => value ? parseInt(value.split(':')[1]) : 0)
   const [ampm, setAmpm] = useState(() => {
     if (!value) return 'AM'
     return parseInt(value.split(':')[0]) >= 12 ? 'PM' : 'AM'
   })
 
-  // Sync back to parent
   function emit(h, m, ap) {
     let h24 = h % 12
     if (ap === 'PM') h24 += 12
@@ -596,60 +630,36 @@ function TimePicker({ value, onChange }) {
 
   function setH(h) { setHour(h); emit(h, min, ampm) }
   function setM(m) { setMin(m);  emit(hour, m, ampm) }
-  function toggleAmpm() {
-    const next = ampm === 'AM' ? 'PM' : 'AM'
-    setAmpm(next); emit(hour, min, next)
-  }
 
   const HOURS = Array.from({ length: 12 }, (_, i) => i + 1)
   const MINS  = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
   return (
     <div className={styles.timePicker}>
-      {/* Hour scroll */}
       <div className={styles.timeScroll}>
         <div className={styles.timeScrollLabel}>Hour</div>
         <div className={styles.timeScrollList}>
           {HOURS.map(h => (
-            <button
-              key={h}
-              className={`${styles.timeItem} ${hour === h ? styles.timeItemActive : ''}`}
-              onClick={() => setH(h)}
-            >
+            <button key={h} className={`${styles.timeItem} ${hour === h ? styles.timeItemActive : ''}`} onClick={() => setH(h)}>
               {String(h).padStart(2,'0')}
             </button>
           ))}
         </div>
       </div>
-
       <div className={styles.timeSep}>:</div>
-
-      {/* Minute scroll */}
       <div className={styles.timeScroll}>
         <div className={styles.timeScrollLabel}>Min</div>
         <div className={styles.timeScrollList}>
           {MINS.map(m => (
-            <button
-              key={m}
-              className={`${styles.timeItem} ${min === m ? styles.timeItemActive : ''}`}
-              onClick={() => setM(m)}
-            >
+            <button key={m} className={`${styles.timeItem} ${min === m ? styles.timeItemActive : ''}`} onClick={() => setM(m)}>
               {String(m).padStart(2,'0')}
             </button>
           ))}
         </div>
       </div>
-
-      {/* AM/PM */}
       <div className={styles.timeAmpm}>
-        <button
-          className={`${styles.ampmBtn} ${ampm === 'AM' ? styles.ampmActive : ''}`}
-          onClick={() => { setAmpm('AM'); emit(hour, min, 'AM') }}
-        >AM</button>
-        <button
-          className={`${styles.ampmBtn} ${ampm === 'PM' ? styles.ampmActive : ''}`}
-          onClick={() => { setAmpm('PM'); emit(hour, min, 'PM') }}
-        >PM</button>
+        <button className={`${styles.ampmBtn} ${ampm === 'AM' ? styles.ampmActive : ''}`} onClick={() => { setAmpm('AM'); emit(hour, min, 'AM') }}>AM</button>
+        <button className={`${styles.ampmBtn} ${ampm === 'PM' ? styles.ampmActive : ''}`} onClick={() => { setAmpm('PM'); emit(hour, min, 'PM') }}>PM</button>
       </div>
     </div>
   )
@@ -675,6 +685,9 @@ function DotsIcon() {
 }
 function TrashIcon() {
   return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+}
+function EditIcon() {
+  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 }
 function ArrowRightIcon() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>

@@ -9,7 +9,7 @@ import { fetchUserCampaigns, deleteCampaign, searchCampaigns } from '../lib/camp
 import styles from './Dashboard.module.css'
 
 const FRAMEWORKS = [
-  { id: 'ai',       color: '#EBF0FF', stroke: '#3B6BF5', label: 'AI Post Generator',  desc: 'Multi-platform captions & hashtags via Gemini', icon: 'bolt' },
+  { id: 'ai',       color: '#EBF0FF', stroke: '#3B6BF5', label: 'AI Post Generator',  desc: 'Multi-platform captions & hashtags via Groq', icon: 'bolt' },
   { id: 'audience', color: '#F0FDF4', stroke: '#16A34A', label: 'Audience Targeting', desc: 'Persona-matched messaging strategy',              icon: 'users' },
   { id: 'ideas',    color: '#FFF7ED', stroke: '#EA580C', label: 'Campaign Ideation',  desc: 'Creative concepts & content calendar ideas',      icon: 'lightbulb' },
   { id: 'custom',   color: '#FDF4FF', stroke: '#9333EA', label: 'Custom Flow',        desc: 'AI-generated bespoke campaign skeleton',           icon: 'zap' },

@@ -51,9 +51,9 @@ ML = {
     "random_state":  42,
 }
 
-# ── Gemini generation defaults ─────────────────────────────────────
-GEMINI = {
-    "model":            "gemini-2.5-flash",
-    "temperature":      0.9,
+# ── Groq generation defaults ───────────────────────────────────────
+GROQ = {
+    "model":             "llama-3.1-8b-instant",
+    "temperature":       0.9,
     "max_output_tokens": 4000,
 }

@@ -237,7 +237,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
         }
 
         data = await generateWithFallback(prompt, schema, {
-          gemini: { temperature: 0.95, maxOutputTokens: 8192 },
+          groq: { temperature: 0.95, maxOutputTokens: 2000 },
         })
       }
 

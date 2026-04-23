@@ -60,20 +60,37 @@ export default function AudienceTargetingPanel({ onClose, onSaved, onNoBrief, sh
     try {
       let data = null
 
-      // ── Step 1: Try backend (Gemini cascade) ─────────────────────────────
+      // ── Step 1: Try backend (Groq) ──────────────────────────────────────
       try {
         const res = await fetch('http://localhost:3000/audience-targeting', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(form),
         })
-        if (res.ok) data = await res.json()
-      } catch (_) { /* backend unavailable — try Gemini direct */ }
+        if (res.ok) {
+          const raw = await res.json()
+          // Backend returns new schema (description/motivations/pain_points/behavior/content_preferences/buying_trigger)
+          // Normalise to the UI schema (identity_label/behavior/mindset/pain_point/hook/best_content_style/best_platform)
+          if (raw?.personas?.length) {
+            raw.personas = raw.personas.map(p => ({
+              ...p,
+              identity_label:     p.identity_label     || p.persona_name || '',
+              behavior:           p.behavior           || p.description  || '',
+              mindset:            p.mindset            || (Array.isArray(p.motivations) ? p.motivations.join(' ') : '') || '',
+              pain_point:         p.pain_point         || (Array.isArray(p.pain_points) ? p.pain_points[0] : '') || '',
+              hook:               p.hook               || p.buying_trigger || '',
+              best_content_style: p.best_content_style || (Array.isArray(p.content_preferences) ? p.content_preferences[0] : '') || '',
+              best_platform:      p.best_platform      || '',
+            }))
+          }
+          data = raw
+        }
+      } catch (_) { /* backend unavailable — try Groq direct */ }
 
-      // ── Step 2: Try Gemini direct from browser ────────────────────────────
+      // ── Step 2: Try Groq direct from browser ──────────────────────────────
       if (!data) {
         const prompt = `You are a senior marketing strategist and audience research expert.
-Generate 3 HIGH-QUALITY audience personas that are practical, easy to understand, highly relevant to modern social media behaviour, and directly useful for content and campaign creation.
+Generate 3 HIGH-QUALITY audience personas. Return ONLY valid JSON.
 
 INPUT:
 Brand: ${form.brand_name}
@@ -85,50 +102,29 @@ Age Group: ${form.age_group}
 Customer Type: ${form.customer_type}
 Pain Points: ${form.pain_points}
 
-Generate EXACTLY 3 personas. Each must have: persona_name (format: "Persona N — [Short Identity Label]" — NO real first names), identity_label, behavior, mindset, pain_point, hook, best_content_style, best_platform.
+Generate EXACTLY 3 personas. Return ONLY valid JSON, start with { end with }.
+{
+  "personas": [
+    {
+      "persona_name": "Persona 1 — [Short Identity Label]",
+      "identity_label": "short archetype label",
+      "behavior": "how they behave online and in daily life",
+      "mindset": "what drives and worries them",
+      "pain_point": "their core frustration specific to this product",
+      "hook": "the one message that makes them stop scrolling",
+      "best_content_style": "exact content formats they respond to",
+      "best_platform": "primary platform with reasoning"
+    }
+  ],
+  "audience_overlap_matrix": "insight about how these 3 personas overlap",
+  "channel_priority": [
+    { "platform": "Instagram", "priority": "Must-Have", "rationale": "why" }
+  ],
+  "cultural_moments": ["moment 1", "moment 2", "moment 3"]
+}`
 
-Also provide: audience_overlap_matrix (string), channel_priority (array of {platform, priority, rationale}), cultural_moments (array of strings).`
-
-        const schema = {
-          type: 'OBJECT',
-          properties: {
-            personas: {
-              type: 'ARRAY',
-              items: {
-                type: 'OBJECT',
-                properties: {
-                  persona_name:       { type: 'STRING' },
-                  identity_label:     { type: 'STRING' },
-                  behavior:           { type: 'STRING' },
-                  mindset:            { type: 'STRING' },
-                  pain_point:         { type: 'STRING' },
-                  hook:               { type: 'STRING' },
-                  best_content_style: { type: 'STRING' },
-                  best_platform:      { type: 'STRING' },
-                },
-                required: ['persona_name', 'identity_label', 'behavior', 'mindset', 'pain_point', 'hook', 'best_content_style', 'best_platform'],
-              },
-            },
-            audience_overlap_matrix: { type: 'STRING' },
-            channel_priority: {
-              type: 'ARRAY',
-              items: {
-                type: 'OBJECT',
-                properties: {
-                  platform:  { type: 'STRING' },
-                  priority:  { type: 'STRING' },
-                  rationale: { type: 'STRING' },
-                },
-                required: ['platform', 'priority', 'rationale'],
-              },
-            },
-            cultural_moments: { type: 'ARRAY', items: { type: 'STRING' } },
-          },
-          required: ['personas', 'audience_overlap_matrix', 'channel_priority', 'cultural_moments'],
-        }
-
-        data = await generateWithFallback(prompt, schema, {
-          gemini: { temperature: 1.0, maxOutputTokens: 6000 },
+        data = await generateWithFallback(prompt, null, {
+          groq: { temperature: 1.0, maxOutputTokens: 1400 },
         })
       }
 

@@ -7,8 +7,8 @@
 # ── Streamlit app ──────────────────────────────────────────────────
 streamlit>=1.32.0
 
-# ── Google Gemini API ──────────────────────────────────────────────
-google-genai>=0.3.0
+# ── Groq AI (LLM) ─────────────────────────────────────────────────
+groq>=0.9.0
 
 # ── Data handling ──────────────────────────────────────────────────
 pandas>=2.0.0
@@ -21,7 +21,7 @@ nltk>=3.8.1
 scikit-learn>=1.4.0
 
 # ── HuggingFace model training (optional — only for train.py) ─────
-# Uncomment if running training/train.py:
+# Uncomment if running ml/training/train.py:
 # transformers>=4.40.0
 # datasets>=2.19.0
 # torch>=2.2.0

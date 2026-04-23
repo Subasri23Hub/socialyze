@@ -5,61 +5,6 @@ import FillFromBriefButton from './FillFromBriefButton.jsx'
 import { generateWithFallback } from '../lib/generateWithFallback'
 import { postGeneratorFallback } from '../lib/fallbackService'
 
-// ── Gemini responseSchema ─────────────────────────────────────────────────
-const schema = {
-  type: 'OBJECT',
-  properties: {
-    campaign_tagline:  { type: 'STRING' },
-    campaign_summary:  { type: 'STRING' },
-    brand_voice_guide: { type: 'STRING' },
-    audience_insight:  { type: 'STRING' },
-    platforms: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          platform_name: { type: 'STRING' },
-          posts: {
-            type: 'ARRAY',
-            items: {
-              type: 'OBJECT',
-              properties: {
-                hook:              { type: 'STRING' },
-                caption:           { type: 'STRING' },
-                hashtags:          { type: 'ARRAY', items: { type: 'STRING' } },
-                cta:               { type: 'STRING' },
-                content_type:      { type: 'STRING' },
-                best_time:         { type: 'STRING' },
-                visual_direction:  { type: 'STRING' },
-                engagement_tactic: { type: 'STRING' },
-              },
-              required: ['hook', 'caption', 'hashtags', 'cta', 'content_type'],
-            },
-          },
-        },
-        required: ['platform_name', 'posts'],
-      },
-    },
-    campaign_ideas: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          title:             { type: 'STRING' },
-          big_idea:          { type: 'STRING' },
-          cultural_relevance:{ type: 'STRING' },
-          viral_mechanism:   { type: 'STRING' },
-          expected_impact:   { type: 'STRING' },
-        },
-        required: ['title', 'big_idea', 'expected_impact'],
-      },
-    },
-    kpis:        { type: 'ARRAY', items: { type: 'STRING' } },
-    budget_tips: { type: 'ARRAY', items: { type: 'STRING' } },
-  },
-  required: ['platforms', 'campaign_tagline', 'campaign_summary'],
-}
-
 const PLATFORMS  = ['Instagram', 'Twitter', 'LinkedIn', 'Facebook', 'TikTok', 'YouTube']
 const TONES      = ['Casual', 'Professional', 'Inspirational', 'Humorous', 'Urgent', 'Bold', 'Empathetic', 'Witty']
 const AUDIENCES  = ['Gen Z', 'Millennials', 'Professionals', 'Students', 'Parents', 'Entrepreneurs', 'Executives', 'Creators']
@@ -143,56 +88,52 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     let shaped = null
 
     try {
-      const platformContext = {
-        Instagram: 'visually-led storytelling, Reels-first, aesthetic carousels, relatable captions with line breaks, emojis used intentionally, 3–5 hashtags in first comment',
-        Twitter:   'punchy under-280-char hooks, trending conversation inserts, thread potential, wit over polish, 1–2 hashtags max, reply-bait questions',
-        LinkedIn:  'thought-leadership tone, data-backed claims, professional narrative arc, personal story hooks, no hashtag spam (3 max), carousel documents',
-        Facebook:  'community-driven, longer storytelling format, event/group tie-ins, shareable emotional angles, 2–3 hashtags',
-        TikTok:    'trend-native hooks in first 2 seconds, POV or challenge format, casual language, trending audio references, UGC-style raw energy',
-        YouTube:   'strong title + thumbnail hook drives 90% of clicks, first 30 seconds must earn the watch, chapters for retention, end-screen CTAs, description SEO with timestamps',
+      const platformHints = {
+        Instagram: 'Reels-first, hook line 1, 3-5 hashtags, save-worthy carousels',
+        Twitter:   'Under 280 chars, opinionated hook, 1-2 hashtags, thread potential',
+        LinkedIn:  'Personal story hook, data-backed, 3 hashtags max, end with question',
+        Facebook:  'Community-first, longer story, shareable emotional angle, 2-3 hashtags',
+        TikTok:    'Hook in 2s, POV/challenge format, raw UGC energy, trending audio ref',
+        YouTube:   'Title = 90% clicks, hook in 30s, description SEO, end-screen CTA',
       }
 
-      const selectedPlatformContext = selectedPlatforms
-        .map(p => `${p}: ${platformContext[p] || 'platform-native best practices'}`)
+      const platLines = selectedPlatforms
+        .map(p => `${p}: ${platformHints[p] || 'platform-native best practices'}`)
         .join('\n')
 
-      const prompt = `You are the Creative Director at a world-class social media agency — the kind that handles Nike, Apple, Spotify, and Zomato. You produce campaigns that win Cannes Lions, not generic AI filler.
+      const prompt = `Social media Creative Director. Agency-quality campaign output only.
 
-CAMPAIGN BRIEF:
-- Brand          : ${form.brand}
-- Product/Service: ${form.product}
-- Campaign Type  : ${form.campaignType}
-- Campaign Goal  : ${form.goal}
-- Target Audience: ${form.audience}
-- Tone           : ${form.tone}
-- Keywords/Themes: ${form.keywords || 'derive from brand context'}
-- Platforms      : ${selectedPlatforms.join(', ')}
-- Variations     : ${form.variations} posts per platform
+Brief: ${form.brand} | ${form.product} | ${form.campaignType} | Goal: ${form.goal} | Audience: ${form.audience} | Tone: ${form.tone}${form.keywords ? ` | Keywords: ${form.keywords}` : ''}
+Platforms: ${selectedPlatforms.join(', ')} | ${form.variations} variation(s) per platform
 
-PLATFORM INTELLIGENCE — write natively for each:
-${selectedPlatformContext}
+Platform rules:
+${platLines}
 
-YOUR MANDATE:
-1. CAMPAIGN TAGLINE — one unforgettable line. Not a description. A battle cry.
-2. BRAND VOICE GUIDE — 3 sentences describing exactly how this brand should sound.
-3. AUDIENCE INSIGHT — a sharp, specific truth about this audience that most brands miss.
-4. PLATFORM POSTS — for EACH platform, write ${form.variations} DISTINCT variations with hook, caption, hashtags, CTA, content type, best time, visual direction, and engagement tactic.
-5. CREATIVE CAMPAIGN IDEAS — 3 big creative concepts with title, big idea, cultural relevance, viral mechanism, and expected impact.
-6. KPIs — 5 specific, measurable KPIs with target benchmarks.
-7. BUDGET TIPS — 4 strategic media spend recommendations.
+Deliver:
+1. campaign_tagline — one memorable line
+2. campaign_summary — 2 sentences
+3. brand_voice_guide — 2 sentences on how this brand sounds
+4. audience_insight — one sharp truth about ${form.audience}
+5. platforms — array: for each platform, ${form.variations} posts each with hook, caption, hashtags[], cta, content_type, best_time, visual_direction, engagement_tactic
+6. campaign_ideas — 3 concepts: title, big_idea, cultural_relevance, viral_mechanism, expected_impact
+7. kpis — 4 measurable KPIs
+8. budget_tips — 3 media spend tips
 
-Write like your reputation depends on it. Every word must earn its place.`
+Return ONLY valid JSON. Start { end }.
+{
+  "campaign_tagline":"","campaign_summary":"","brand_voice_guide":"","audience_insight":"",
+  "platforms":[{"platform_name":"${selectedPlatforms[0]}","posts":[{"hook":"","caption":"","hashtags":[],"cta":"","content_type":"","best_time":"","visual_direction":"","engagement_tactic":""}]}],
+  "campaign_ideas":[{"title":"","big_idea":"","cultural_relevance":"","viral_mechanism":"","expected_impact":""}],
+  "kpis":[],"budget_tips":[]
+}`
 
-      // ── Call Gemini with cascade + retry logic ────────────────────────────
-      let parsed = await generateWithFallback(prompt, schema, {
-        gemini: { model: 'gemini-2.5-flash', temperature: 1.0, maxOutputTokens: 8192 },
-        onRetry: (attempt, waitSecs) => {
-          setRetryStatus(`Model busy — retrying (${attempt}/3) in ${waitSecs}s…`)
-        },
+      // ── Call Groq ─────────────────────────────────────────────────────────
+      let parsed = await generateWithFallback(prompt, null, {
+        groq: { temperature: 1.0, maxOutputTokens: 1800 },
       })
       setRetryStatus('')
 
-      // ── Domain-specific fallback if Gemini unavailable ────────────────────
+      // ── Domain-specific fallback if Groq unavailable ──────────────────────
       if (!parsed) {
         parsed = postGeneratorFallback({
           brand:             form.brand,
@@ -227,7 +168,7 @@ Write like your reputation depends on it. Every word must earn its place.`
       }
     } catch (err) {
       setRetryStatus('')
-      setError(err.message || 'Generation failed. Make sure VITE_GEMINI_API_KEY is set in your .env file.')
+      setError(err.message || 'Generation failed. Make sure VITE_GROQ_API_KEY is set in your frontend/.env file.')
       setLoading(false)
       return
     }
@@ -277,7 +218,7 @@ Write like your reputation depends on it. Every word must earn its place.`
       <div className={styles.panelHdr}>
         <div>
           <div className={styles.panelTitle}>AI Post Generator</div>
-          <div className={styles.panelSub}>Agency-grade campaigns — powered by Google Gemini</div>
+          <div className={styles.panelSub}>Agency-grade campaigns — powered by Groq</div>
         </div>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
       </div>

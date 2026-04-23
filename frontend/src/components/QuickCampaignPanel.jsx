@@ -15,37 +15,17 @@ export default function QuickCampaignPanel({ onClose }) {
     setError(''); setLoading(true); setResult(null)
 
     try {
-      const prompt = `You are a social media marketing expert.
-Based on the following campaign description:
-"${input.trim()}"
+      const prompt = `Social media expert. Campaign brief: "${input.trim()}"
 
-Generate:
-1. 3 creative campaign ideas
-2. 3 different post variations (different angles)
-3. 3 engaging captions
-4. 10 relevant hashtags
+Generate: 3 campaign ideas, 3 post variations (different angles), 3 captions, 10 hashtags.
+Keep tone engaging and platform-native.
 
-Keep the tone engaging and suitable for social media.
+Return ONLY valid JSON. Start { end }.
+{"campaign_ideas":[{"title":"...","description":"..."}],"post_variations":[{"angle":"...","content":"..."}],"captions":["..."],"hashtags":["#..."]}`
 
-Respond in JSON format only with this exact structure:
-{
-  "campaign_ideas": [
-    { "title": "...", "description": "..." },
-    { "title": "...", "description": "..." },
-    { "title": "...", "description": "..." }
-  ],
-  "post_variations": [
-    { "angle": "...", "content": "..." },
-    { "angle": "...", "content": "..." },
-    { "angle": "...", "content": "..." }
-  ],
-  "captions": ["...", "...", "..."],
-  "hashtags": ["#...", "#...", "#...", "#...", "#...", "#...", "#...", "#...", "#...", "#..."]
-}`
-
-      // ── Try Gemini, fall back to domain content if unavailable ────────────
+      // ── Try Groq, fall back to domain content if unavailable ──────────────
       let data = await generateWithFallback(prompt, null, {
-        gemini: { temperature: 0.9, maxOutputTokens: 4096 },
+        groq: { temperature: 0.9, maxOutputTokens: 900 },
       })
 
       if (!data) {
@@ -79,7 +59,7 @@ Respond in JSON format only with this exact structure:
           </div>
           <div>
             <div className={styles.title}>New Campaign</div>
-            <div className={styles.sub}>Describe your campaign and get instant ideas, posts, captions & hashtags</div>
+            <div className={styles.sub}>Describe your campaign and get instant ideas, posts, captions &amp; hashtags</div>
           </div>
         </div>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>

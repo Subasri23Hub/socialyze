@@ -1,10 +1,10 @@
 /**
  * Socialyze — Express API Server
  * =========================================================
- * REST API wrapping Google Gemini for all campaign generation flows.
- * Uses a multi-model Gemini cascade with 3 retry attempts per model.
- * After all Gemini models exhaust retries, domain-specific structured
- * fallback content is returned — the UI always receives usable data.
+ * REST API wrapping Groq for all campaign generation flows.
+ * Single call to Groq — no retries. If Groq responds, we use it.
+ * Fallback content is served ONLY if Groq genuinely fails (auth error,
+ * network error, or truly unparseable response).
  *
  * Routes:
  *   GET  /health                — Health check
@@ -16,8 +16,8 @@
  *   POST /creator-studio        — Creator Studio editing guide
  *   POST /send-invite           — Send workspace share invite email
  *
- * LLM Provider: Google Gemini (sole provider)
- * Fallback:     Domain-specific structured content (never fails the user)
+ * LLM Provider: Groq (llama-3.1-8b-instant)
+ * Fallback:     Domain-specific structured content (ONLY if Groq call fails)
  *
  * Team   : Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
  * Company: Sourcesys Technologies
@@ -29,7 +29,7 @@ const cors    = require("cors");
 require("dotenv").config();
 
 const {
-  GEMINI_CONFIG,
+  GROQ_CONFIG,
   TEMPERATURE_PRESETS,
   getCampaignTypeGuidance,
   getToneVoice,
@@ -45,14 +45,6 @@ const campaignIdeationRouter  = require("./routes/campaignIdeation");
 const customFlowRouter        = require("./routes/customFlow");
 const creatorStudioRouter     = require("./routes/creatorStudio");
 
-// ── Lazy-load Gemini SDK ───────────────────────────────────────────────────
-let GoogleGenerativeAI;
-try {
-  ({ GoogleGenerativeAI } = require("@google/generative-ai"));
-} catch {
-  console.warn("⚠️  @google/generative-ai not installed. Run: npm install @google/generative-ai");
-}
-
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -62,24 +54,14 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Gemini model cascade
-// When the primary model (gemini-2.5-flash) hits quota, we automatically
-// try the next model. Free-tier quotas are per-model so each has its own pool.
+// Groq model configuration
 // ─────────────────────────────────────────────────────────────────────────────
-const GEMINI_MODEL_CASCADE = [
-  GEMINI_CONFIG.modelName || "gemini-2.5-flash",  // primary — highest quality
-  "gemini-2.0-flash",                              // fallback 1 — separate quota pool
-  "gemini-1.5-flash",                              // fallback 2 — older, very available
-  "gemini-1.5-flash-8b",                           // fallback 3 — smallest, best availability
-];
+const GROQ_MODEL   = GROQ_CONFIG.modelName || "llama-3.1-8b-instant";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-// Exponential backoff delays in ms: attempt 1 → 1s, attempt 2 → 2s, attempt 3 → 4s
-const BACKOFF_MS = [1000, 2000, 4000];
-
-/**
- * Safely parse JSON from AI response text.
- * Handles markdown fences, leading/trailing prose, and partial matches.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// safeParseJSON — strips markdown fences and extracts the first JSON object
+// ─────────────────────────────────────────────────────────────────────────────
 function safeParseJSON(raw) {
   if (!raw) return null;
   let cleaned = raw
@@ -99,115 +81,156 @@ function safeParseJSON(raw) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// callGeminiWithModel
-// Single attempt on a specific Gemini model.
-// Returns raw text string, or null on quota/error.
+// callGroq — single Groq call, no retries.
+// Returns parsed JSON object on success, or null on any failure.
 // ─────────────────────────────────────────────────────────────────────────────
-async function callGeminiWithModel(modelName, prompt, opts = {}) {
-  if (!GoogleGenerativeAI) return null;
+async function callGroq(prompt, opts = {}) {
+  const apiKey = process.env.GROQ_API_KEY || "";
+  if (!apiKey) {
+    console.error("[Groq] ❌ No API key found. Set GROQ_API_KEY in backend/.env");
+    return null;
+  }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-  if (!apiKey) return null;
+  const temperature     = opts.temperature ?? GROQ_CONFIG.temperature;
+  const maxOutputTokens = opts.maxTokens   ?? GROQ_CONFIG.maxOutputTokens;
 
-  const geminiClient    = new GoogleGenerativeAI(apiKey);
-  const temperature     = opts.temperature ?? GEMINI_CONFIG.temperature;
-  const maxOutputTokens = opts.maxTokens   ?? GEMINI_CONFIG.maxOutputTokens;
-
-  const modelConfig = {
-    contents:         [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature,
-      topK:            GEMINI_CONFIG.topK,
-      topP:            GEMINI_CONFIG.topP,
-      maxOutputTokens,
-    },
-    safetySettings: GEMINI_CONFIG.safetySettings,
-  };
+  console.log(`[Groq] → Calling model: ${GROQ_MODEL}`);
 
   try {
-    const model    = geminiClient.getGenerativeModel({ model: modelName });
-    const response = await model.generateContent(modelConfig);
-    return response.response.text();
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch(GROQ_API_URL, {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model:       GROQ_MODEL,
+        temperature,
+        max_tokens:  maxOutputTokens,
+        top_p:       GROQ_CONFIG.topP,
+        messages:    [{ role: "user", content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errBody = "";
+      try { errBody = await response.text(); } catch { /* ignore */ }
+      console.error(`[Groq] ❌ HTTP ${response.status}: ${errBody.slice(0, 300)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const text = data?.choices?.[0]?.message?.content || null;
+
+    if (!text) {
+      console.error("[Groq] ❌ Empty content in response.");
+      return null;
+    }
+
+    console.log("[Groq] ✅ Got response, parsing JSON...");
+    const parsed = safeParseJSON(text);
+
+    if (!parsed) {
+      console.error("[Groq] ❌ Response was not valid JSON. Raw (first 300 chars):", text.slice(0, 300));
+      return null;
+    }
+
+    console.log("[Groq] ✅ Parsed successfully.");
+    return parsed;
+
   } catch (err) {
-    const isQuota = err.message && (
-      err.message.includes("429") ||
-      err.message.includes("quota") ||
-      err.message.includes("Too Many Requests")
-    );
-    if (isQuota) {
-      console.warn(`[Gemini:${modelName}] Quota exceeded — will try next model.`);
+    if (err.name === "AbortError") {
+      console.error("[Groq] ❌ Request timed out after 30s.");
     } else {
-      console.error(`[Gemini:${modelName}] API error:`, err.message.slice(0, 120));
+      console.error("[Groq] ❌ Fetch error:", err.message);
     }
     return null;
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// callGeminiJSON
-// Tries EACH model in cascade with up to 3 parse-retry attempts.
-// Exponential backoff between retries: 1s → 2s → 4s.
-// Returns parsed JSON or null if all models fail.
+// callGroqText — single Groq call returning raw text (for legacy route usage).
+// Returns string on success, or null on failure.
 // ─────────────────────────────────────────────────────────────────────────────
-async function callGeminiJSON(prompt, opts = {}) {
-  for (const modelName of GEMINI_MODEL_CASCADE) {
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      const promptToUse = attempt === 1
-        ? prompt
-        : attempt === 2
-          ? prompt + "\n\nCRITICAL: Your previous response was not valid JSON. Return ONLY the raw JSON object with no explanation, no markdown, no code fences. Start your response with { and end with }."
-          : prompt + "\n\nFINAL ATTEMPT: Return ONLY a valid JSON object. No text before or after. No markdown. No code fences. Start with { and end with }. Nothing else.";
-
-      const raw    = await callGeminiWithModel(modelName, promptToUse, opts);
-      const parsed = safeParseJSON(raw);
-
-      if (parsed) {
-        if (modelName !== GEMINI_MODEL_CASCADE[0]) {
-          console.log(`[Gemini] ✓ Succeeded with fallback model: ${modelName}`);
-        }
-        return parsed;
-      }
-
-      // null raw = quota/error — skip remaining attempts on this model
-      if (!raw) break;
-
-      // non-null but unparseable — retry with backoff
-      if (attempt < 3) {
-        const waitMs = BACKOFF_MS[attempt - 1];
-        console.warn(`[Gemini:${modelName}] Attempt ${attempt} unparseable. Retrying in ${waitMs / 1000}s...`);
-        await new Promise(r => setTimeout(r, waitMs));
-      } else {
-        console.warn(`[Gemini:${modelName}] All 3 parse attempts failed. Trying next model...`);
-      }
-    }
+async function callGroqText(prompt, opts = {}) {
+  const apiKey = process.env.GROQ_API_KEY || "";
+  if (!apiKey) {
+    console.error("[Groq] ❌ No API key found.");
+    return null;
   }
 
-  console.warn("[callGeminiJSON] All Gemini models exhausted. Domain fallback will be used.");
-  return null;
+  const temperature     = opts.temperature ?? GROQ_CONFIG.temperature;
+  const maxOutputTokens = opts.maxTokens   ?? GROQ_CONFIG.maxOutputTokens;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId  = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch(GROQ_API_URL, {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model:       GROQ_MODEL,
+        temperature,
+        max_tokens:  maxOutputTokens,
+        top_p:       GROQ_CONFIG.topP,
+        messages:    [{ role: "user", content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errBody = "";
+      try { errBody = await response.text(); } catch { /* ignore */ }
+      console.error(`[Groq/text] ❌ HTTP ${response.status}: ${errBody.slice(0, 300)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data?.choices?.[0]?.message?.content || null;
+
+  } catch (err) {
+    console.error("[Groq/text] ❌ Fetch error:", err.message);
+    return null;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// generateWithFallback — centralised AI generation for ALL backend routes.
-// Returns Gemini result if available, or null so the route can apply its
-// domain-specific fallback. Never throws or fails the HTTP request.
+// generateWithFallback — main AI function injected into all routes.
+// Alias for callGroq. Returns parsed JSON or null.
 // ─────────────────────────────────────────────────────────────────────────────
 async function generateWithFallback(prompt, opts = {}) {
-  return await callGeminiJSON(prompt, opts);
+  return await callGroq(prompt, opts);
 }
 
-// ── Inject AI helpers into every request via res.locals ───────────
+// ── Inject Groq helpers into every request via res.locals ─────────────────
 app.use((req, res, next) => {
-  res.locals.callGemini           = (prompt, opts) => callGeminiWithModel(GEMINI_MODEL_CASCADE[0], prompt, opts);
-  res.locals.callGeminiJSON       = (prompt, opts) => generateWithFallback(prompt, opts);
+  // Primary helpers — used by all route modules
+  res.locals.callGroqJSON         = (prompt, opts) => callGroq(prompt, opts);
+  res.locals.callGroqText         = (prompt, opts) => callGroqText(prompt, opts);
   res.locals.generateWithFallback = generateWithFallback;
+  // Backward-compat aliases so any remaining legacy references still resolve
+  res.locals.callGeminiJSON       = res.locals.callGroqJSON;
+  res.locals.callGemini           = res.locals.callGroqText;
   next();
 });
 
-// ── Static fallback builders ───────────────────────────────────────
+// ── Static fallback builders ───────────────────────────────────────────────
 const FALLBACK_POSTS = {
-  instagram: (name, goal) => `✨ Introducing ${name}!\n\n${goal}.\n\nTap the link in bio to find out more. 👇\n\n#NewArrival #MustHave #${name.replace(/\s+/g, "")}`,
+  instagram: (name, goal) => `✨ ${name}\n\n${goal}.\n\nTap the link in bio to find out more. 👇\n\n#NewArrival #MustHave #${name.replace(/\s+/g, "")}`,
   twitter:   (name, goal) => `Just dropped: ${name}. ${goal}. Don't sleep on this. 👀 #NewProduct #${name.replace(/\s+/g, "")}`,
-  linkedin:  (name, goal) => `Excited to introduce ${name}.\n\n${goal}.\n\nWould love your thoughts — have you faced this problem before?\n\n#Innovation #${name.replace(/\s+/g, "")}`,
+  linkedin:  (name, goal) => `Introducing ${name}.\n\n${goal}.\n\nWould love your thoughts — have you faced this problem before?\n\n#Innovation #${name.replace(/\s+/g, "")}`,
   facebook:  (name, goal) => `Big news! 🎉 ${name} is here. ${goal}. Drop a 🙋 if you want to know more!`,
   tiktok:    (name, goal) => `POV: You just discovered ${name} and your life is about to change 👀 ${goal} #FYP #${name.replace(/\s+/g, "")}`,
 };
@@ -239,12 +262,14 @@ function buildFallbackHashtags(platform, campaignType, keywords = []) {
 // GET /health
 // ─────────────────────────────────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
+  const apiKey = process.env.GROQ_API_KEY || "";
   res.json({
-    status:        "healthy",
-    timestamp:     new Date().toISOString(),
-    llmProvider:   "Gemini",
-    geminiModels:  GEMINI_MODEL_CASCADE,
-    fallbackReady: true,
+    status:       "healthy",
+    timestamp:    new Date().toISOString(),
+    llmProvider:  "Groq",
+    groqModel:    GROQ_MODEL,
+    apiKeyLoaded: !!apiKey,
+    retries:      "none — single call per request",
   });
 });
 
@@ -289,31 +314,27 @@ app.post("/generate", async (req, res) => {
       return res.status(400).json({ error: "campaign_name, campaign_goal and platforms are required." });
     }
 
-    const platformList   = platforms.join(", ");
-    const platformRules  = getPlatformRules(platforms);
-    const toneVoice      = getToneVoice(tone);
-    const campaignGuide  = getCampaignTypeGuidance(campaign_type);
+    const platformList  = platforms.join(", ");
+    const toneVoice     = getToneVoice(tone);
+    const campaignGuide = getCampaignTypeGuidance(campaign_type);
+
+    // Compact per-platform schema
     const platformSchema = platforms
-      .map(p => `"${p.toLowerCase()}": { "post": "Full platform-native post copy", "caption": "Short punchy 1-2 line caption" }`)
+      .map(p => `"${p.toLowerCase()}": { "post": "platform-native post copy", "caption": "1-2 line caption" }`)
       .join(",\n  ");
 
-    const prompt = `You are a high-performing social media content strategist at a top creative agency.
+    const prompt = `Social media strategist. Write native posts for each platform.
 
-CAMPAIGN BRIEF:
 Brand: ${campaign_name} | Type: ${campaign_type} | Goal: ${campaign_goal}
-Audience: ${target_audience} | Tone: ${tone} — ${toneVoice}
-Platforms: ${platformList}
+Audience: ${target_audience} | Tone: ${tone} (${toneVoice}) | Platforms: ${platformList}
+Strategy: ${campaignGuide}
 
-${campaignGuide}
-${platformRules}
+For EACH platform: a full native post and a 1-2 line caption. No "Introducing". No corporate speak.
 
-For EACH platform, generate a POST (full copy, platform-native) and CAPTION (1-2 lines).
-NEVER start with "Introducing" or use corporate speak.
-
-Return ONLY valid JSON. Start with { end with }.
+Return ONLY valid JSON. Start { end }.
 { ${platformSchema} }`;
 
-    const aiData   = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 4096 });
+    const aiData   = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 800 });
     const result   = {};
     const keywords = [campaign_name, target_audience, campaign_type].filter(Boolean);
 
@@ -352,29 +373,21 @@ app.post("/generate-post", async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(", ")}` });
     }
 
-    const platformRule = getPlatformRules([platform]);
     const toneVoice    = getToneVoice(tone);
 
-    const prompt = `You are a high-performing social media content strategist.
+    const prompt = `Social media strategist for ${platform}.
 Brand: ${brand_name} | Product: ${product_or_service} | Goal: ${campaign_goal}
-Audience: ${target_audience} | Tone: ${tone} — ${toneVoice}
-Platform: ${platform} | Key Message: ${key_message} | CTA: ${call_to_action}
+Audience: ${target_audience} | Tone: ${tone} (${toneVoice}) | Key Message: ${key_message} | CTA: ${call_to_action}
 
-${platformRule}
+Write 3 post variations, 3 captions, 10 hashtags, 1 CTA for ${platform}. Each post must be platform-native, hook-first, no corporate speak.
 
-Generate 3 post variations, 3 captions, 10 hashtags, 1 CTA.
-Return ONLY valid JSON. Start with { end with }.
-{
-  "post_variations": ["v1","v2","v3"],
-  "caption_variations": ["c1","c2","c3"],
-  "hashtags": ["#tag1","#tag2","#tag3","#tag4","#tag5","#tag6","#tag7","#tag8","#tag9","#tag10"],
-  "cta": "specific CTA line"
-}`;
+Return ONLY valid JSON. Start { end }.
+{"post_variations":["v1","v2","v3"],"caption_variations":["c1","c2","c3"],"hashtags":["#t1","#t2","#t3","#t4","#t5","#t6","#t7","#t8","#t9","#t10"],"cta":"CTA line"}`;
 
-    const parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 3000 });
+    const parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 900 });
 
-    // Domain-specific fallback for /generate-post
     if (!parsed) {
+      console.warn("[/generate-post] Groq returned null. Serving domain fallback.");
       const brandTag   = `#${brand_name.replace(/\s+/g, "")}`;
       const productTag = `#${product_or_service.replace(/\s+/g, "")}`;
       return res.json({
@@ -405,7 +418,7 @@ Return ONLY valid JSON. Start with { end with }.
   }
 });
 
-// ── Card-specific route modules ────────────────────────────────────
+// ── Card-specific route modules ────────────────────────────────────────────
 app.use("/audience-targeting", audienceTargetingRouter);
 app.use("/campaign-ideation",  campaignIdeationRouter);
 app.use("/custom-flow",        customFlowRouter);
@@ -416,8 +429,10 @@ app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-// ── Start ──────────────────────────────────────────────────────────
+// ── Start ──────────────────────────────────────────────────────────────────
 app.listen(PORT, async () => {
+  const apiKey = process.env.GROQ_API_KEY || "";
+
   console.log(`\n✅  Socialyze API running on http://localhost:${PORT}`);
   console.log(`   GET  /health               — Health check`);
   console.log(`   POST /generate             — Multi-platform campaign generator`);
@@ -427,10 +442,9 @@ app.listen(PORT, async () => {
   console.log(`   POST /custom-flow          — Custom Flow card`);
   console.log(`   POST /creator-studio       — Creator Studio editing guide`);
   console.log(`   POST /send-invite          — Workspace share invite email`);
-  console.log(`\n   🔄  LLM provider: Google Gemini`);
-  console.log(`   🔄  Model cascade: ${GEMINI_MODEL_CASCADE.join(" → ")}`);
-  console.log(`   🛡️   Retry logic: 3 attempts per model with exponential backoff`);
-  console.log(`   🛡️   Fallback: Domain-specific structured content (always usable)`);
+  console.log(`\n   🔑  API key loaded: ${apiKey ? `YES (ends in ...${apiKey.slice(-4)})` : "❌ NO — set GROQ_API_KEY in backend/.env"}`);
+  console.log(`   🤖  Model: ${GROQ_MODEL}`);
+  console.log(`   ⚡  Mode: single call per request — no retries`);
 
   await verifyConnection();
 });
