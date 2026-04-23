@@ -91,7 +91,7 @@ export default function CustomFlowPanel({ onClose, onSaved, onNoBrief, sharedCam
       let data = null
 
       try {
-        const res = await fetch('http://localhost:3000/custom-flow', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/custom-flow`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

@@ -197,7 +197,7 @@ export default function CreatorStudioPage() {
       const ctx = extractBrandContext(campaignCtx, matchedBrief, contentHint)
       setUsedCtx(ctx)
 
-      const res = await fetch('/creator-studio', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/creator-studio`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ ctx }),

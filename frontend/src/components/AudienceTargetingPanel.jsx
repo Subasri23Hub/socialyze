@@ -62,7 +62,7 @@ export default function AudienceTargetingPanel({ onClose, onSaved, onNoBrief, sh
 
       // ── Step 1: Try backend (Groq) ──────────────────────────────────────
       try {
-        const res = await fetch('http://localhost:3000/audience-targeting', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/audience-targeting`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(form),
