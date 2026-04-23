@@ -2,23 +2,21 @@
 
 <div align="center">
 
-**Organisation:** Sourcesys Technologies &nbsp;|&nbsp; **Version:** 1.0.0 &nbsp;|&nbsp; **Status:** Production-Ready &nbsp;|&nbsp; **Licence:** MIT
+**Organisation:** Sourcesys Technologies &nbsp;|&nbsp; **Version:** 1.0.0 &nbsp;|&nbsp; **Status:** Deployed &nbsp;|&nbsp; **Licence:** MIT
 
-**Project Team:** Subasri B · Gautham Krishnan K · Ashwin D · Vinjarapu Ajay Kumar
+**Author:** Subasri B 
+
+**Live:** [https://socialyze-nu.vercel.app](https://socialyze-nu.vercel.app)
 
 ---
 
-### Technology Stack
-
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES2024-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.19-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Groq](https://img.shields.io/badge/Groq-llama--3.1--8b--instant-F55036?style=for-the-badge)](https://console.groq.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 
 </div>
@@ -31,42 +29,40 @@
   <tr>
     <td align="center" width="50%">
       <strong>Sign In</strong><br/><br/>
-      <img src="docs/screenshots/signin.png" alt="Socialyze Sign In" width="100%"/>
-      <br/><sub>Supabase-authenticated sign-in with Google OAuth support</sub>
+      <img src="docs/screenshots/signin.png" alt="Sign In" width="100%"/>
+      <br/><sub>Supabase-authenticated sign-in page</sub>
     </td>
     <td align="center" width="50%">
       <strong>All Campaigns Dashboard</strong><br/><br/>
       <img src="docs/screenshots/all_campaigns.png" alt="All Campaigns" width="100%"/>
-      <br/><sub>Summary metrics, quick-start frameworks, and recent campaign cards</sub>
+      <br/><sub>Summary stats, service launchers, recent campaign cards</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <strong>Active Campaigns</strong><br/><br/>
       <img src="docs/screenshots/active_campaigns.png" alt="Active Campaigns" width="100%"/>
-      <br/><sub>All AI-generated campaigns with platform tags and output counts</sub>
+      <br/><sub>All generated campaigns with platform tags and output counts</sub>
     </td>
     <td align="center" width="50%">
       <strong>Shared Workspaces</strong><br/><br/>
       <img src="docs/screenshots/shared_workspaces.png" alt="Shared Workspaces" width="100%"/>
-      <br/><sub>Invite teammates with View only or Can edit permissions</sub>
+      <br/><sub>Invite teammates with View or Edit permissions</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <strong>Content Planner</strong><br/><br/>
       <img src="docs/screenshots/content_planner.png" alt="Content Planner" width="100%"/>
-      <br/><sub>Kanban-style task board — Planned, In Progress, Completed</sub>
+      <br/><sub>Kanban board — Planned, In Progress, Completed</sub>
     </td>
     <td align="center" width="50%">
       <strong>Compliance Guard</strong><br/><br/>
       <img src="docs/screenshots/compliance_guard.png" alt="Compliance Guard" width="100%"/>
-      <br/><sub>Rule-based compliance checks against platform policies and brand safety</sub>
+      <br/><sub>Rule-based compliance checks against platform policies</sub>
     </td>
   </tr>
 </table>
-
-> **Note:** Screenshots are stored in `docs/screenshots/`. If they do not render in your viewer, the images are also included directly in this repository's `docs/` directory.
 
 ---
 
@@ -76,61 +72,82 @@
 - [System Architecture](#2-system-architecture)
 - [Directory Structure](#3-directory-structure)
 - [Technology Stack](#4-technology-stack)
-- [Database Schema](#5-database-schema)
-- [API Reference](#6-api-reference)
-- [Frontend Module Reference](#7-frontend-module-reference)
-- [Machine Learning Pipeline](#8-machine-learning-pipeline)
-- [Installation and Quick Start](#9-installation-and-quick-start)
-- [Environment Variables](#10-environment-variables)
-- [Email Service](#11-email-service)
-- [Security Notes](#12-security-notes)
+- [AI Services](#5-ai-services)
+- [Database Schema](#6-database-schema)
+- [API Reference](#7-api-reference)
+- [Frontend Pages and Routing](#8-frontend-pages-and-routing)
+- [Machine Learning Pipeline](#9-machine-learning-pipeline)
+- [Local Setup](#10-local-setup)
+- [Environment Variables](#11-environment-variables)
+- [Email Service](#12-email-service)
 - [Deployment](#13-deployment)
-- [Required Raw Datasets](#14-required-raw-datasets)
-- [Licence and Team](#15-licence-and-team)
+- [Security Notes](#14-security-notes)
+- [Team](#15-team)
 
 ---
 
 ## 1. Project Overview
 
-Socialyze is a full-stack AI-powered social media campaign generation platform. The system combines a Groq-backed REST API (running `llama-3.1-8b-instant`), a React single-page application with Supabase authentication and persistence, a Python-based machine learning pipeline for tone classification, and a content planning module — all working in concert to help marketing teams produce multi-platform campaign content at scale.
+Socialyze is a deployed, full-stack AI social media campaign platform built by Sourcesys Technologies. It combines a Groq-powered REST API, a React SPA with Supabase authentication, and a Python ML pipeline into a single production system that helps marketing teams generate multi-platform campaign content at scale.
 
-**Key capabilities at a glance:**
+**What it does:**
 
-- Generate multi-platform campaign posts, captions, and hashtags across Instagram, Twitter, LinkedIn, Facebook, TikTok, and YouTube in a single request
-- Target content to eight audience segments: Gen Z, Millennials, Professionals, Students, Parents, Entrepreneurs, Executives, and Creators
-- Apply nine distinct content tones: Casual, Professional, Inspirational, Humorous, Urgent, Bold, Empathetic, Witty, and Provocative
-- Schedule and track content production with a Kanban-based Content Planner backed by Supabase
-- Run rule-based compliance checks against platform policies, copyright signals, and brand tone guidelines
-- Export campaign reports as print-ready PDFs directly from the browser — no external dependency
-- Share campaign workspaces with teammates under configurable View only or Can edit permissions
-- Fine-tune a DistilBERT tone classifier on a custom dataset of 4,566 social media posts
+- Generates platform-native posts, captions, and hashtags for Instagram, Twitter/X, LinkedIn, Facebook, TikTok, and YouTube from a single brief
+- Builds 3 deep audience personas with psychographics, pain points, behavioral patterns, and buying triggers
+- Produces 5 campaign concepts scaled from safe-and-smart to high-risk/viral, each with a tagline, strategic logic, and first execution step
+- Outputs a full campaign skeleton — name, brand voice guide, content pillars, platform strategy, weekly posting plan, ready-to-publish captions, tiered hashtag strategy, and content calendar hooks
+- Generates format-specific content editing guides for Reels, Carousels, Photo Posts, Stories, YouTube Shorts, and Twitter Threads
+- Runs rule-based compliance checks against Instagram, Twitter, LinkedIn, Facebook, TikTok, and YouTube platform policies
+- Tracks content tasks on a Kanban board backed by Supabase
+- Sends HTML collaboration invite emails via Nodemailer when workspaces are shared
 
-All AI generation routes through a single Groq API call (`llama-3.1-8b-instant`) with domain-specific structured fallback content served if Groq is unavailable. Both the Express backend and the React frontend independently implement the Groq call, so the system remains resilient whether requests originate from the API server or directly from the browser.
+**AI model:** Groq `llama-3.1-8b-instant` for the Express backend. Groq `llama-3.3-70b-versatile` for the Streamlit interface. Single call per request — no retries. If Groq fails for any reason, structured domain-specific fallback content is served so the UI always returns usable output.
 
 ---
 
 ## 2. System Architecture
 
-### 2.1 High-Level Architecture
+### 2.1 Layers
 
-Socialyze is structured as three decoupled layers that communicate over standard HTTP and PostgreSQL row-level security policies.
-
-- **Frontend (React + Vite):** Single-page application served on port 5173. All API calls are proxied to the Express backend via `vite.config.js` to eliminate browser CORS issues during development. Authentication state is managed through the Supabase JS client with persistent JWT sessions and automatic token refresh. The frontend also contains its own Groq caller (`lib/generateWithFallback.js`) and domain-specific fallback service (`lib/fallbackService.js`) as a secondary path for direct browser-to-Groq calls.
-
-- **Backend (Express + Node.js):** REST API server on port 3000. Wraps the Groq API (`https://api.groq.com/openai/v1/chat/completions`), handles generation for all four service routes and two inline routes, and dispatches collaboration invite emails via Nodemailer.
-
-- **Data Layer (Supabase):** Managed PostgreSQL database with Row Level Security enforced at the SQL policy level. Stores user profiles, campaigns, campaign outputs, content calendar tasks, and shared workspace invitations.
-
-- **ML Pipeline (Python):** Standalone scripts for data preprocessing, synthetic data generation, DistilBERT fine-tuning, and model evaluation. Decoupled from the web application — runs independently on demand.
-
-### 2.2 Groq Generation Flow
-
-When a request arrives, the backend (or frontend fallback path) makes a single call to the Groq API with `llama-3.1-8b-instant`. If Groq responds with valid JSON, that response is returned immediately. If Groq fails for any reason (auth error, network timeout, unparseable response), a domain-specific structured fallback object is returned so the UI always displays coherent, usable content.
-
-| Priority | Provider | Role |
+| Layer | Technology | Deployment |
 |---|---|---|
-| 1 — Primary | Groq `llama-3.1-8b-instant` | Real AI response |
-| 2 — Static | Domain fallback content | Structured hardcoded response (emergency only) |
+| Frontend SPA | React 18 + Vite 5, CSS Modules, Supabase JS | Vercel |
+| REST API | Node.js 18 + Express 4, Groq SDK, Nodemailer | Render |
+| Database | Supabase (PostgreSQL + RLS) | Supabase cloud |
+| ML / Demo UI | Python 3.10, Groq Python SDK, Streamlit | Streamlit Cloud |
+
+### 2.2 Request Flow
+
+```
+Browser (React)
+  │
+  ├─ Supabase JS ─────────────────────────────────────────── Supabase (PostgreSQL)
+  │    auth, campaigns, outputs, content tasks, sharing
+  │
+  └─ fetch() → Express API (Render)
+         │
+         └─ POST https://api.groq.com/openai/v1/chat/completions
+                ├─ Groq responds → safeParseJSON → return to client
+                └─ Groq fails   → domain fallback object → return to client
+```
+
+### 2.3 Groq Integration
+
+All generation routes call Groq using native `fetch()` with a 30-second `AbortController` timeout. The `safeParseJSON` function strips markdown fences and extracts the first valid JSON block from the raw model response. If parsing fails, `null` is returned and the route falls back to structured hardcoded content.
+
+| Function | Returns | Used by |
+|---|---|---|
+| `callGroq(prompt, opts)` | Parsed JSON object or `null` | All card routes |
+| `callGroqText(prompt, opts)` | Raw string or `null` | Legacy compatibility |
+| `generateWithFallback(prompt, opts)` | Alias for `callGroq` | Injected to `res.locals` |
+
+Temperature presets by task type:
+
+| Preset | Value | Used for |
+|---|---|---|
+| `creative` | 1.0 | Post generation, campaign ideation, creator studio |
+| `strategic` | 0.75 | Audience targeting, custom flow |
+| `structured` | 0.65 | Posting plans, hashtag lists |
 
 ---
 
@@ -138,89 +155,89 @@ When a request arrives, the backend (or frontend fallback path) makes a single c
 
 ```
 SOCIAL MEDIA PROJECT/
-├── app.py                          Streamlit app (ML demo / legacy frontend)
-├── preprocess.py                   Data preprocessing pipeline
-├── generate_synthetic_data.py      Synthetic data generator
+├── README.md
 ├── requirements.txt                Python dependencies
-├── supabase_schema.sql             Core database schema + RLS
+├── package.json                    Root — dev scripts only
+├── .env                            Root env (gitignored)
+├── .gitignore
+├── supabase_schema.sql             Core tables + RLS + auto-profile trigger
 ├── content_calendar_migration.sql  Content calendar table + RLS
 ├── shared_workspaces_migration.sql Collaboration tables + cross-user RLS
-├── .env                            Root environment variables (gitignored)
-├── .gitignore
-│
-├── config/
-│   ├── __init__.py
-│   └── settings.py                 Centralised Python configuration
-│
+├── preprocess.py                   Dataset preprocessing pipeline
+├── generate_synthetic_data.py      Synthetic data generator
+├──
 ├── backend/
-│   ├── server.js                   Express API + Groq integration
-│   ├── config.js                   Groq config + platform/tone/campaign-type helpers
-│   ├── emailService.js             Nodemailer invite email service
-│   ├── test-groq.js                Groq API key tester (run: node test-groq.js)
+│   ├── server.js                   Express API entry point
+│   ├── config.js                   Groq config, temperature presets, platform/tone/campaign-type helpers
+│   ├── emailService.js             Nodemailer — SMTP invite emails (Gmail / Brevo / generic SMTP)
+│   ├── test-groq.js                Groq API key tester
 │   ├── package.json
-│   ├── .env                        Backend environment variables (gitignored)
+│   ├── .env                        Backend env (gitignored)
 │   └── routes/
-│       ├── audienceTargeting.js    POST /audience-targeting
-│       ├── campaignIdeation.js     POST /campaign-ideation
-│       ├── creatorStudio.js        POST /creator-studio (6 content formats)
-│       └── customFlow.js           POST /custom-flow
-│
+│       ├── audienceTargeting.js    POST /audience-targeting — 3 psychographic personas
+│       ├── campaignIdeation.js     POST /campaign-ideation — 5 campaign concepts
+│       ├── customFlow.js           POST /custom-flow — full campaign skeleton
+│       └── creatorStudio.js        POST /creator-studio — 6 content format guides
+├──
 ├── frontend/
+│   ├── vite.config.js              Dev proxy + build config
+│   ├── index.html                  Loads DM Sans + Syne from Google Fonts
 │   ├── package.json
-│   ├── vite.config.js              Dev server + API proxy configuration
-│   ├── index.html
+│   ├── .env                        Frontend env (gitignored)
 │   └── src/
-│       ├── App.jsx                 Root component — auth gate + page routing
-│       ├── supabaseClient.js       Supabase client singleton
+│       ├── App.jsx                 Auth gate + lazy-loaded page router
+│       ├── supabaseClient.js       Supabase singleton
 │       ├── main.jsx
 │       ├── lib/
-│       │   ├── campaignService.js  Supabase CRUD — campaigns, outputs, brief, sharing
-│       │   ├── fallbackService.js  Domain-specific structured fallback content (all panels)
-│       │   ├── generateWithFallback.js  Frontend Groq caller + JSON parser
-│       │   └── safeParseJSON.js    JSON sanitiser for Groq responses
+│       │   ├── campaignService.js      Supabase CRUD — campaigns, outputs, brief, sharing
+│       │   ├── fallbackService.js      Domain-specific fallback content (all panels)
+│       │   ├── generateWithFallback.js Frontend Groq caller
+│       │   └── safeParseJSON.js        JSON sanitiser for Groq responses
 │       ├── components/
-│       │   ├── Auth.jsx            Sign-in / sign-up UI
-│       │   ├── Dashboard.jsx       Home dashboard
-│       │   ├── Sidebar.jsx         Navigation sidebar
-│       │   ├── GeneratePanel.jsx   Multi-platform campaign generator panel
+│       │   ├── Auth.jsx                Sign-in / sign-up
+│       │   ├── Dashboard.jsx           Home dashboard
+│       │   ├── Sidebar.jsx             Navigation
+│       │   ├── GeneratePanel.jsx       AI Post Generator panel
 │       │   ├── AudienceTargetingPanel.jsx
 │       │   ├── CampaignIdeationPanel.jsx
 │       │   ├── CustomFlowPanel.jsx
+│       │   ├── CampaignCard.jsx
 │       │   ├── FillFromBriefButton.jsx
-│       │   ├── QuickCampaignPanel.jsx
-│       │   └── CampaignCard.jsx
+│       │   └── QuickCampaignPanel.jsx
 │       └── pages/
-│           ├── CampaignWorkspace.jsx      Full campaign workspace
+│           ├── CampaignWorkspace.jsx   Full workspace view
 │           ├── ActiveCampaignsPage.jsx
 │           ├── CampaignBriefPage.jsx
-│           ├── ContentPlannerPage.jsx
+│           ├── ContentPlannerPage.jsx  Kanban board
 │           ├── CreatorStudioPage.jsx
 │           ├── ComplianceGuardPage.jsx
-│           ├── ExportPanel.jsx            Print-ready PDF export modal
+│           ├── ExportPanel.jsx         PDF export modal
 │           ├── BrandsPage.jsx
 │           ├── SharedWorkspacesPage.jsx
 │           ├── FavouritesPage.jsx
 │           ├── ArchivedPage.jsx
 │           └── TeamPage.jsx
-│
+├──
+├── streamlit_app/
+│   └── app.py                  Streamlit UI — mirrors full React app, uses llama-3.3-70b-versatile
+├──
+├── ml/                         ML pipeline modules
 ├── training/
-│   └── train.py                    DistilBERT fine-tuning script
-│
+│   └── train.py                DistilBERT fine-tuning
 ├── evaluation/
-│   └── evaluate.py                 Model evaluation — Accuracy, F1, BLEU
-│
+│   └── evaluate.py             Accuracy, F1, BLEU evaluation
 ├── scripts/
-│   └── evaluator.js                Node.js metric utilities
-│
+│   └── evaluator.js            Node.js metric utilities
+├── config/
+│   └── settings.py             Centralised Python configuration
 ├── docs/
-│   ├── PREPROCESSING.md            Preprocessing pipeline documentation
-│   └── screenshots/                UI screenshots referenced in this README
-│
+│   ├── PREPROCESSING.md
+│   └── screenshots/
 └── data/
-    ├── raw/          Raw datasets (gitignored)
-    ├── processed/    Cleaned CSVs, train/test splits, hashtag map
-    ├── models/       Label mappings + DistilBERT tone classifier weights
-    └── evaluation/   evaluation_report.json, metrics_summary.csv
+    ├── raw/                    Raw datasets (gitignored)
+    ├── processed/              Cleaned CSVs, train/test splits, hashtag map
+    ├── models/                 DistilBERT weights (gitignored)
+    └── evaluation/             evaluation_report.json, metrics_summary.csv
 ```
 
 ---
@@ -229,170 +246,215 @@ SOCIAL MEDIA PROJECT/
 
 | Technology | Version | Role |
 |---|---|---|
-| [React](https://react.dev/) | 18.2.0 | Frontend SPA with CSS Modules for component-scoped styling |
-| [Vite](https://vitejs.dev/) | 5.0.0 | Frontend build tool and dev server with API proxy |
-| [@supabase/supabase-js](https://supabase.com/docs/reference/javascript) | 2.103.0 | Client-side auth, session management, database access |
-| [Express](https://expressjs.com/) | 4.19.2 | REST API server — routing, middleware, static file serving |
-| [Groq API](https://console.groq.com/) | — | LLM provider — `llama-3.1-8b-instant` for all AI generation |
-| [Nodemailer](https://nodemailer.com/) | 8.0.5 | SMTP email dispatch for collaboration invites |
-| [Supabase (PostgreSQL)](https://supabase.com/) | Managed | Relational database with Row Level Security |
-| [Python](https://www.python.org/) | 3.10+ | ML pipeline runtime |
-| [HuggingFace Transformers](https://huggingface.co/docs/transformers) | 4.40.0 | DistilBERT fine-tuning for tone classification |
-| [Scikit-learn](https://scikit-learn.org/) | 1.4.0 | Label encoding, train/test split, evaluation metrics |
-| [NLTK](https://www.nltk.org/) | 3.8.1 | Tokenisation, stopword removal, BLEU score |
-| [Pandas](https://pandas.pydata.org/) | 2.0.0 | Dataset loading, normalisation, schema unification |
-| [NumPy](https://numpy.org/) | 1.26.0 | Numerical operations in preprocessing and evaluation |
-| [Streamlit](https://streamlit.io/) | 1.32.0 | Python UI for ML pipeline demo |
+| React | 18.2.0 | Frontend SPA, CSS Modules, lazy-loaded routing |
+| Vite | 5.0.0 | Build tool, dev server, API proxy |
+| @supabase/supabase-js | 2.103.0 | Auth, session management, database client |
+| Express | 4.19.2 | REST API server |
+| Groq API (`llama-3.1-8b-instant`) | — | LLM for all backend generation |
+| Groq API (`llama-3.3-70b-versatile`) | — | LLM for Streamlit interface |
+| Nodemailer | 8.0.5 | SMTP invite email dispatch |
+| Supabase (PostgreSQL) | Managed | Relational DB with Row Level Security |
+| Python | 3.10+ | ML pipeline |
+| HuggingFace Transformers | 4.40.0 | DistilBERT fine-tuning |
+| Scikit-learn | 1.4.0 | Label encoding, train/test split, metrics |
+| NLTK | 3.8.1 | Tokenisation, stopword removal, BLEU score |
+| Pandas | 2.0.0 | Dataset preprocessing |
+| Streamlit | 1.32.0 | Python UI — mirrors full React app |
 
 ---
 
-## 5. Database Schema
+## 5. AI Services
 
-All tables reside in the `public` schema of a Supabase-managed PostgreSQL instance. Row Level Security is enabled on every table. Three SQL files must be executed in order to provision the full schema.
+Socialyze exposes four distinct AI services, each backed by a dedicated Express route with its own prompt builder, structured output schema, and domain-specific fallback.
 
-### 5.1 Schema Files — Execute in Order
+### AI Post Generator (`POST /generate-post`)
 
-```
-1. supabase_schema.sql             Core tables + RLS + auto-profile trigger
-2. content_calendar_migration.sql  Content calendar table + per-user RLS
-3. shared_workspaces_migration.sql Collaboration tables + cross-user RLS
-```
+Generates 3 post variations, 3 caption variations, 10 hashtags, and a CTA for a single platform. Inputs: brand name, product, campaign goal, target audience, key message, CTA, tone, platform. Prompt is hook-first and platform-aware. Fallback: 3 fully formed posts using the brand and product inputs.
 
-Run each file in: **Supabase Dashboard → SQL Editor → New Query**
+### Audience Targeting (`POST /audience-targeting`)
 
-### 5.2 Table Reference
+Generates 3 psychographic personas. Each persona includes:
+- `persona_name` — first name plus a psychological archetype (e.g. "Meera — The Quietly Burnt-Out Overachiever")
+- `description` — 2 sentences on their life and specific frustration
+- `motivations` — 3 identity-driven desires
+- `pain_points` — 3 visceral friction moments
+- `behavior` — platform habits, what they save and share
+- `content_preferences` — 3 specific format types they stop for
+- `buying_trigger` — the single moment that converts them
 
-| Table | Description |
-|---|---|
-| `profiles` | One row per authenticated user. Auto-created by a trigger on `auth.users` INSERT. Columns: `id`, `full_name`, `email`, `avatar_url`, `created_at`. |
-| `campaigns` | Core campaign record. Columns: `id` (UUID), `user_id`, `campaign_name`, `status` (Draft/Active/Archived), `platforms` (text[]), `tone`, `created_at`, `updated_at`. Unique constraint on `(user_id, campaign_name)`. |
-| `campaign_outputs` | Generated AI output per campaign per feature. `output_type` is constrained to: `post_generator`, `audience`, `ideation`, `custom_flow`. `generated_data` stored as JSONB. |
-| `content_calendar` | Scheduled content tasks. Columns: `title`, `task_type`, `platform`, `description`, `date`, `time`, `status` (Planned / In Progress / Completed). Optionally linked to a campaign. |
-| `shared_workspaces` | Collaboration share records. Columns: `campaign_id`, `owner_id`, `invitee_email`, `invitee_id`, `permission` (view / edit), `status` (pending / accepted). Unique on `(campaign_id, invitee_email)`. |
+Fallback delivers 3 fully written personas ("The Efficiency Hunter", "The Quietly Sceptical Researcher", "The Identity-Driven Early Adopter") scoped to the brand's region and product.
+
+### Campaign Ideation (`POST /campaign-ideation`)
+
+Generates 5 campaign concepts scaled from safe-and-smart (#1) to high-risk viral (#5). Each concept includes `title`, `tagline`, `idea`, `why_it_works`, and a tactical `execution` — written as the actual first piece of content, not a description of it. Fallback delivers 5 complete concepts including "The Anti-Campaign" and "Radical Honesty" frameworks.
+
+### Custom Flow (`POST /custom-flow`)
+
+Produces the most comprehensive output in the system: a full campaign skeleton including `campaign_name`, `campaign_summary`, `brand_voice_guide` (4 DO/NEVER directives), 5 `content_pillars` with examples, per-platform `platform_strategy`, a `posting_plan` with tactical notes per week, 6 publish-ready `sample_captions`, a tiered `hashtag_strategy` (brand / trend / niche), and 8 `calendar_hooks`. Fallback outputs a complete 4-week posting plan with real post ideas.
+
+### Creator Studio (`POST /creator-studio`)
+
+Reads campaign context and generates a publish-ready editing guide for 6 content formats. Format is auto-detected from a `contentHint` string using keyword matching.
+
+| Format | Detected keywords | Output |
+|---|---|---|
+| Reel | reel, tiktok, video, clip | `reelScript` with hook, 3 scenes, CTA |
+| Carousel | carousel, slide, swipe, document | `carouselSlides` — 5 slides with headline, body, visual direction |
+| Photo | post, photo, image, static, infograph | `photoPost` with image direction and caption |
+| Story | story, stories | `storyFrames` — 3 frames at 0-4s, 4-11s, 11-15s |
+| Short | short, youtube short, yt short | `reelScript` at 60s max |
+| Thread | thread, tweet thread | `twitterThread` — 5 tweets |
+
+Every response also includes `editingInstructions` (5 CapCut or Canva steps with exact menu paths), `canvaLayout` (dimensions, fonts with real font names, hex colors, placement), `thumbnailIdea`, and `mistakesToAvoid` (3 specific to the brand and format).
+
+### Multi-Platform Generator (`POST /generate`)
+
+Called by the main Generate Panel. Takes a campaign brief and a list of platforms, returns per-platform `post`, `caption`, and `hashtags[]` in a single response. Platform-native prompt rules injected from `config.js` for each target platform.
 
 ---
 
-## 6. API Reference
+## 6. Database Schema
 
-The Express server exposes the following HTTP endpoints. All POST endpoints accept and return JSON. The server injects `callGroqJSON`, `callGroqText`, and `generateWithFallback` helpers into `res.locals` so route modules can access Groq without direct imports.
+All tables live in Supabase's `public` schema with Row Level Security enforced at the SQL policy level. Three migration files must be executed in order.
+
+**Execute in Supabase Dashboard → SQL Editor → New Query:**
+
+```
+1. supabase_schema.sql             — Core tables + RLS + auto-profile trigger
+2. content_calendar_migration.sql  — Content calendar table + per-user RLS
+3. shared_workspaces_migration.sql — Collaboration tables + cross-user RLS
+```
+
+| Table | Key Columns | Notes |
+|---|---|---|
+| `profiles` | `id`, `full_name`, `email`, `avatar_url` | Auto-created via trigger on `auth.users` INSERT |
+| `campaigns` | `id` (UUID), `user_id`, `campaign_name`, `status`, `platforms[]`, `tone` | `status`: Draft / Active / Archived. Unique on `(user_id, campaign_name)` |
+| `campaign_outputs` | `campaign_id`, `output_type`, `generated_data` (JSONB) | `output_type` constrained to: `post_generator`, `audience`, `ideation`, `custom_flow` |
+| `content_calendar` | `title`, `task_type`, `platform`, `date`, `time`, `status` | `status`: Planned / In Progress / Completed. Optionally linked to a campaign |
+| `shared_workspaces` | `campaign_id`, `owner_id`, `invitee_email`, `permission`, `status` | `permission`: view / edit. `status`: pending / accepted. Unique on `(campaign_id, invitee_email)` |
+
+---
+
+## 7. API Reference
+
+All POST endpoints accept `Content-Type: application/json` and return JSON. The server injects `callGroqJSON`, `callGroqText`, and `generateWithFallback` into `res.locals` at the middleware layer so route modules access Groq without direct imports.
 
 ### Endpoints
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/health` | Returns server status, timestamp, active LLM provider, model name, and API key status. |
-| POST | `/generate` | Multi-platform campaign generator. Returns per-platform `post`, `caption`, and `hashtags`. |
-| POST | `/generate-post` | Single-platform AI post generator. Returns `post_variations[]`, `caption_variations[]`, `hashtags[]`, `cta`. |
-| POST | `/audience-targeting` | Generates 3 psychographic audience personas with `motivations`, `pain_points`, `behavior`, `content_preferences`, `buying_trigger`. |
-| POST | `/campaign-ideation` | Generates 5 creatively distinct campaign concepts scaled from safe to bold. Returns `title`, `tagline`, `idea`, `why_it_works`, `execution`. |
-| POST | `/custom-flow` | Full integrated campaign skeleton: name, pillars, platform strategy, posting plan, captions, hashtags, calendar hooks. |
-| POST | `/creator-studio` | Platform-specific content editing guide. Supports 6 content formats — reel, carousel, photo, story, short (YouTube Shorts), and thread. |
-| POST | `/send-invite` | Sends an HTML invite email for workspace collaboration. Accepts `toEmail`, `ownerEmail`, `campaignName`, `permission`. |
+| GET | `/health` | Server status, LLM provider, model name, API key loaded flag |
+| POST | `/generate` | Multi-platform generator — returns `{ [platform]: { post, caption, hashtags[] } }` |
+| POST | `/generate-post` | Single-platform AI post generator — returns `post_variations[]`, `caption_variations[]`, `hashtags[]`, `cta` |
+| POST | `/audience-targeting` | 3 psychographic personas with full behavioral profiles |
+| POST | `/campaign-ideation` | 5 campaign concepts from safe to viral |
+| POST | `/custom-flow` | Full campaign skeleton: pillars, strategy, posting plan, captions, hashtags, calendar hooks |
+| POST | `/creator-studio` | Platform-specific editing guide for 6 content formats |
+| POST | `/send-invite` | Sends HTML collaboration invite via SMTP. Accepts `toEmail`, `ownerEmail`, `campaignName`, `permission` |
 
-### POST /generate — Request Body
+### Required Fields per Endpoint
+
+**POST /generate**
+`campaign_name`, `campaign_goal`, `platforms[]`
+
+**POST /generate-post**
+`brand_name`, `campaign_goal`, `product_or_service`, `target_audience`, `key_message`, `call_to_action`
+
+**POST /audience-targeting**
+`brand_name`, `product_or_service`, `campaign_objective`, `industry`, `age_group`, `region`, `customer_type`, `pain_points`
+
+**POST /campaign-ideation**
+`brand_name`, `product_or_service`, `campaign_goal`, `target_audience`, `tone`, `season_or_event`, `platform_focus`
+
+**POST /custom-flow**
+`brand_name`, `product_or_service`, `business_objective`, `target_audience`, `tone`, `platforms[]`, `campaign_duration`, `key_message`, `call_to_action`
+
+**POST /creator-studio**
+Body: `{ ctx: { campaignName, platforms[], tone, contentHint, ... } }`
+
+**POST /send-invite**
+`toEmail`, `ownerEmail`, `campaignName`, `permission` (view / edit)
+
+### Health Check Response Example
 
 ```json
 {
-  "campaign_name": "Brand Name",
-  "campaign_type": "product launch",
-  "target_audience": "Gen Z",
-  "campaign_goal": "Drive online sales",
-  "tone": "inspirational",
-  "platforms": ["Instagram", "Twitter", "LinkedIn"],
-  "include_hashtags": true,
-  "custom_hashtags": []
+  "status": "healthy",
+  "timestamp": "2025-06-01T10:30:00.000Z",
+  "llmProvider": "Groq",
+  "groqModel": "llama-3.1-8b-instant",
+  "apiKeyLoaded": true,
+  "retries": "none — single call per request"
 }
 ```
 
-### POST /generate-post — Required Fields
-
-`brand_name`, `campaign_goal`, `product_or_service`, `target_audience`, `key_message`, `call_to_action`, `tone` (optional, default: `"professional"`), `platform` (optional, default: `"Instagram"`)
-
-### POST /audience-targeting — Required Fields
-
-`brand_name`, `product_or_service`, `campaign_objective`, `industry`, `age_group`, `region`, `customer_type`, `pain_points`
-
-### POST /campaign-ideation — Required Fields
-
-`brand_name`, `product_or_service`, `campaign_goal`, `target_audience`, `tone`, `season_or_event`, `platform_focus`
-
-### POST /custom-flow — Required Fields
-
-`brand_name`, `product_or_service`, `business_objective`, `target_audience`, `tone`, `platforms`, `campaign_duration`, `key_message`, `call_to_action`
-
-### POST /creator-studio — Content Formats
-
-The route auto-detects the requested format from a `contentHint` string inside the request body `ctx` object. Supported formats:
-
-| Format | Detected from `contentHint` keywords | Output key |
-|---|---|---|
-| `reel` | reel, tiktok, video, film, clip | `reelScript` |
-| `carousel` | carousel, slide, swipe, multi-slide, document | `carouselSlides` |
-| `photo` | post, photo, image, static, infograph | `photoPost` |
-| `story` | story, stories | `storyFrames` |
-| `short` | short, youtube short, yt short | `reelScript` |
-| `thread` | thread, tweet thread, twitter thread | `twitterThread` |
-
 ---
 
-## 7. Frontend Module Reference
+## 8. Frontend Pages and Routing
 
-### 7.1 Application Routing
+`App.jsx` manages all client-side navigation via a single `activeNav` state string — no React Router. All pages are lazy-loaded with `React.lazy` and `Suspense`. Auth state is resolved asynchronously on mount via `supabase.auth.getSession()`; the app renders a spinner until confirmed.
 
-`App.jsx` manages all client-side navigation through a single `activeNav` state string. There is no React Router dependency; routing is handled by conditional rendering. Supabase auth state is resolved asynchronously on mount — the app renders a boot spinner until the session is confirmed or denied.
+| Route Key | Page | Description |
+|---|---|---|
+| `campaigns` (default) | Dashboard | Stats, 4 service launcher cards, recent campaigns |
+| `brief` | Campaign Brief | Optional default brief that pre-fills all service forms |
+| `active` | Active Campaigns | All saved campaigns with search |
+| `planner` | Content Planner | Kanban board — Planned / In Progress / Completed |
+| `fav` | Favourites | Starred campaigns |
+| `archived` | Archived | Archived campaigns |
+| `shared` | Shared Workspaces | Incoming shares + outgoing shares + invite form |
+| `brands` | Brand & Client Hub | Brand profiles with tone, industry, platforms, color |
+| `team` | Team | Current member — team collaboration coming soon |
+| `creator` | Creator Studio | Editing guide generator for 6 content formats |
+| `compliance` | Compliance Guard | Rule-based caption compliance checker |
 
-| Route Key | Page |
-|---|---|
-| `campaigns` (default) | Home dashboard — summary metrics and quick campaign launcher |
-| `brief` | Campaign Brief input form |
-| `active` | Active Campaigns filtered by status |
-| `planner` | Content Planner — Kanban board |
-| `fav` | Favourited campaigns |
-| `archived` | Archived campaigns |
-| `shared` | Shared With Me |
-| `brands` | Brand profiles |
-| `team` | Team management |
-| `creator` | Creator Studio |
-| `compliance` | Compliance Guard |
-
-### 7.2 Frontend Service Library (`src/lib/`)
+### Frontend Service Library (`src/lib/`)
 
 | Module | Responsibility |
 |---|---|
-| `campaignService.js` | All Supabase data operations: save/fetch campaigns, outputs, brief, sharing, collaboration. |
-| `fallbackService.js` | Domain-specific structured fallback content for all panels when Groq is unavailable. Never returns null. |
-| `generateWithFallback.js` | Frontend Groq caller. Single call to `llama-3.1-8b-instant`, returns parsed JSON or null. |
-| `safeParseJSON.js` | JSON sanitiser for raw Groq responses. Strips fences, extracts JSON block, fixes trailing commas. |
+| `campaignService.js` | All Supabase operations — save/fetch campaigns, outputs, brief, sharing |
+| `fallbackService.js` | Structured fallback content for all panels when Groq is unavailable. Never returns null |
+| `generateWithFallback.js` | Browser-side Groq caller. Single call, returns parsed JSON or null |
+| `safeParseJSON.js` | Strips markdown fences, extracts first JSON block, handles malformed output |
+
+### Compliance Guard — Platform Rule Coverage
+
+| Platform | Rules checked |
+|---|---|
+| Instagram | Caption ≤ 2,200 chars, ≤ 30 hashtags, no clickable links in caption, CTA present |
+| Twitter/X | Tweet ≤ 280 chars, ≤ 2 hashtags, strong opening hook |
+| LinkedIn | Post ≤ 3,000 chars, ≤ 5 hashtags, professional tone (no slang) |
+| Facebook | Post ≤ 63,206 chars, CTA present |
+| TikTok | Caption ≤ 2,200 chars, 3–8 hashtags, caption not empty |
+| YouTube | Title ≤ 100 chars, ≥ 5 words in description, CTA present |
 
 ---
 
-## 8. Machine Learning Pipeline
+## 9. Machine Learning Pipeline
 
-The ML pipeline is a seven-stage data engineering and model training workflow that runs entirely in Python. It is decoupled from the web application and can be executed independently.
+The ML pipeline is a standalone Python workflow for tone classification. It runs independently of the web application.
 
-### 8.1 Pipeline Stages
+### Pipeline Stages
 
-| Stage | Description |
-|---|---|
-| Stage 1 — Problem Definition | Define generation targets, identify audience segments, select platforms. |
-| Stage 2 — Data Collection | Collect raw datasets from Kaggle (LinkedIn, Instagram Reels, Social Media Advertising, Sentiment) and manual curation. Store in `data/raw/text/`. |
-| Stage 3 — Preprocessing | Unify 6 raw datasets into a 9-column schema. Clean with NLTK. Encode labels with Scikit-learn `LabelEncoder`. |
-| Stage 4 — Model Selection | DistilBERT (`distilbert-base-uncased`) for supervised 5-class tone classification. |
-| Stage 5 — Training | Fine-tune DistilBERT via HuggingFace Trainer API. Output saved to `data/models/tone_classifier/`. |
-| Stage 6 — Evaluation | Evaluate on held-out test set. Metrics: Accuracy, Precision, Recall, F1 Score, BLEU Score. |
-| Stage 7 — Integration | Streamlit app exposes the pipeline as a UI. Express backend serves generation endpoints. |
+| Stage | Script | Description |
+|---|---|---|
+| 1. Preprocessing | `preprocess.py` | Unifies 6 raw datasets into a 9-column schema. NLTK cleaning, Scikit-learn label encoding, train/test split |
+| 2. Synthetic data | `generate_synthetic_data.py` | Augments underrepresented tone classes |
+| 3. Training | `training/train.py` | Fine-tunes `distilbert-base-uncased` for 5-class tone classification |
+| 4. Evaluation | `evaluation/evaluate.py` | Accuracy, Precision, Recall, F1 Score, BLEU Score against held-out test set |
+| 5. Demo UI | `streamlit_app/app.py` | Streamlit interface — mirrors full React app using Groq `llama-3.3-70b-versatile` |
 
-### 8.2 Preprocessing Output — Last Run
+### Dataset
 
 | Metric | Value |
 |---|---|
-| Total rows | 4,566 |
+| Total rows (post-preprocessing) | 4,566 |
 | Training set | 3,652 rows (80%) |
 | Test set | 914 rows (20%) |
-| Tone classes | 5 (Casual, Professional, Inspirational, Humorous, Urgent) |
+| Tone classes | 5 — Casual, Professional, Inspirational, Humorous, Urgent |
 | Hashtag map topics | 26 |
 
-### 8.3 ML Training Configuration
+### Training Configuration
 
 | Parameter | Value |
 |---|---|
@@ -403,176 +465,169 @@ The ML pipeline is a seven-stage data engineering and model training workflow th
 | Learning rate | 2e-5 |
 | Test split | 0.20 |
 
+### Raw Datasets Required
+
+Place all files in `data/raw/text/` before running `preprocess.py`. These are gitignored.
+
+| Filename | Source |
+|---|---|
+| `enriched_posts.json` | Kaggle — LinkedIn enriched posts |
+| `Instagram_Reels_Data_Cleaned.csv` | Kaggle — Instagram Reels engagement |
+| `sentimentdataset.csv` | Kaggle — Social media sentiment |
+| `Social_Media_Advertising.csv` | Kaggle — Social media advertising |
+| `manual_dataset.csv` | Manual curation — platform-specific annotated posts |
+| `image_dataset.csv` | Manual — visual style annotations |
+
 ---
 
-## 9. Installation and Quick Start
+## 10. Local Setup
 
-### 9.1 Prerequisites
+### Prerequisites
 
-- [Node.js 18](https://nodejs.org/) or later
-- A Groq API key — free from [console.groq.com](https://console.groq.com)
-- A Supabase project — free tier at [supabase.com](https://supabase.com) (project URL and anon key required)
-- [Python 3.10](https://www.python.org/downloads/) or later (ML pipeline only)
+- Node.js 18 or later
+- Groq API key — free from [console.groq.com](https://console.groq.com)
+- Supabase project — free tier at [supabase.com](https://supabase.com)
+- Python 3.10 or later (ML pipeline only)
 
-### 9.2 Start the Express Backend
+### Start the Backend
 
 ```bash
 cd backend
 npm install
-# backend/.env is already configured — do not commit it
-npm run dev        # development (nodemon hot-reload)
-npm start          # production
-# Server at http://localhost:3000
+npm run dev        # nodemon hot-reload on port 3000
 ```
 
-### 9.3 Start the React Frontend
+### Start the Frontend
 
 ```bash
 cd frontend
 npm install
-# frontend/.env is already configured — do not commit it
-npm run dev        # development at http://localhost:5173
-npm run build      # production build → dist/
+npm run dev        # Vite dev server on port 5173
 ```
 
-### 9.4 Test the Groq API Key
+Dev proxy in `vite.config.js` forwards all `/generate*`, `/audience-targeting`, `/campaign-ideation`, `/custom-flow`, `/creator-studio`, `/send-invite`, and `/health` requests to `http://localhost:3000` — no CORS issues in development.
+
+### Test the Groq API Key
 
 ```bash
 cd backend
 node test-groq.js
 ```
 
-### 9.5 Run the Python ML Pipeline
+### Provision Supabase
+
+In **Supabase Dashboard → SQL Editor → New Query**, execute in order:
+
+```sql
+-- 1
+\i supabase_schema.sql
+-- 2
+\i content_calendar_migration.sql
+-- 3
+\i shared_workspaces_migration.sql
+```
+
+### Run the ML Pipeline (optional)
 
 ```bash
 pip install -r requirements.txt
 python preprocess.py
 python training/train.py
 python evaluation/evaluate.py
-streamlit run app.py   # optional — Streamlit demo
-```
-
-### 9.6 Provision the Supabase Database
-
-In **Supabase Dashboard → SQL Editor → New Query**, execute in order:
-
-```
-1. supabase_schema.sql
-2. content_calendar_migration.sql
-3. shared_workspaces_migration.sql
+streamlit run streamlit_app/app.py
 ```
 
 ---
 
-## 10. Environment Variables
+## 11. Environment Variables
 
-### 10.1 Backend (`backend/.env`)
+### Backend (`backend/.env`)
 
 | Variable | Required | Description |
 |---|---|---|
 | `GROQ_API_KEY` | ✅ | Groq API key from [console.groq.com/keys](https://console.groq.com/keys) |
 | `PORT` | — | Express port (default: `3000`) |
-| `APP_URL` | — | Frontend base URL for invite email links (default: `http://localhost:5173`) |
+| `APP_URL` | — | Frontend URL for invite email links (default: `http://localhost:5173`) |
 | `EMAIL_PROVIDER` | — | `gmail` / `brevo` / `smtp` (default: `gmail`) |
-| `GMAIL_USER` | — | Gmail address (Gmail provider) |
+| `GMAIL_USER` | — | Gmail address |
 | `GMAIL_APP_PASS` | — | 16-char Gmail App Password |
-| `BREVO_SMTP_USER` | — | Brevo login email (Brevo provider) |
+| `BREVO_SMTP_USER` | — | Brevo login email |
 | `BREVO_SMTP_KEY` | — | Brevo SMTP key |
-| `SMTP_HOST` | — | Generic SMTP hostname |
+| `SMTP_HOST` | — | Generic SMTP host |
 | `SMTP_PORT` | — | Generic SMTP port (default: `587`) |
 | `SMTP_USER` | — | Generic SMTP username |
 | `SMTP_PASS` | — | Generic SMTP password |
 | `EMAIL_FROM_NAME` | — | Sender display name (default: `Socialyze`) |
 | `EMAIL_FROM_EMAIL` | — | Sender email address |
 
-### 10.2 Frontend (`frontend/.env`)
+### Frontend (`frontend/.env`)
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_GROQ_API_KEY` | ✅ | Groq API key for direct browser-to-Groq calls (fallback path) |
-| `VITE_SUPABASE_URL` | ✅ | Supabase project URL (`https://xyz.supabase.co`) |
+| `VITE_SUPABASE_URL` | ✅ | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | ✅ | Supabase anon (public) key |
-| `VITE_API_URL` | — | Backend base URL (default: `http://localhost:3000`) |
+| `VITE_API_URL` | ✅ | Backend base URL (Render URL in production) |
+| `VITE_GROQ_API_KEY` | — | Groq key for direct browser calls (fallback path only) |
 
-> **Note:** In production, prefer routing all Groq calls through the Express backend and omitting `VITE_GROQ_API_KEY` from the frontend bundle.
+> In production, route all AI calls through the backend and remove `VITE_GROQ_API_KEY` from the frontend bundle.
 
 ---
 
-## 11. Email Service
+## 12. Email Service
 
-The collaboration invite system uses [Nodemailer](https://nodemailer.com/) with a configurable transport provider selected via `EMAIL_PROVIDER`. The service verifies its SMTP connection on startup but does not crash the server if misconfigured — it logs a warning and continues.
+Collaboration invites are sent via [Nodemailer](https://nodemailer.com/) with a configurable SMTP transport. The service verifies its connection on startup and logs a warning if misconfigured — it does not crash the server.
 
-| Provider | Setup |
+| Provider | Notes |
 |---|---|
 | Gmail App Password | Enable 2-Step Verification → generate App Password at `myaccount.google.com/apppasswords`. Set `EMAIL_PROVIDER=gmail`. |
-| Brevo SMTP | Sign up at [brevo.com](https://www.brevo.com/) → generate SMTP key. 300 free emails/day. Set `EMAIL_PROVIDER=brevo`. |
-| Generic SMTP | Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`. Set `EMAIL_PROVIDER=smtp`. |
+| Brevo SMTP | 300 free emails/day, no domain verification required. Set `EMAIL_PROVIDER=brevo`. |
+| Generic SMTP | Mailgun, Postmark, or any standard SMTP. Set `EMAIL_PROVIDER=smtp`. |
 
----
-
-## 12. Security Notes
-
-- **API keys:** Never commit real API keys. All `.env` files are gitignored at both root, `backend/`, and `frontend/` levels.
-- **Raw datasets:** `data/raw/` is gitignored. Raw datasets may contain personal or licensed data.
-- **Model weights:** `data/models/tone_classifier/` is gitignored due to binary file size.
-- **Row Level Security:** All Supabase tables enforce RLS. Users cannot read, write, or delete rows they do not own.
-- **CORS:** The Express backend uses the `cors` middleware with permissive defaults. For production, restrict: `cors({ origin: 'https://your-domain.com' })`.
-- **Frontend Groq key:** `VITE_GROQ_API_KEY` is embedded in the browser bundle. For production deployments, proxy all AI calls through the backend and remove this variable.
-- **Input validation:** Every POST endpoint validates required fields and returns HTTP 400 before any AI call is made.
+The invite email is an HTML template with the campaign name, sharing owner, permission level, and a CTA button linking to the deployed app URL.
 
 ---
 
 ## 13. Deployment
 
-### 13.1 Node.js Backend (Railway / Render / Fly.io)
+### Backend — Render
 
 - Root directory: `backend/`
+- Build command: `npm install`
 - Start command: `node server.js`
-- Add all backend environment variables via the provider's secrets panel.
-- Set `APP_URL` to the deployed frontend URL.
+- Set all backend environment variables in Render's environment panel
+- Set `APP_URL` to the deployed Vercel frontend URL
 
-### 13.2 React Frontend (Vercel / Netlify)
+### Frontend — Vercel
 
 - Root directory: `frontend/`
 - Build command: `npm run build`
 - Output directory: `dist/`
-- Add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GROQ_API_KEY`, and `VITE_API_URL` as environment variables.
-- Set `VITE_API_URL` to the deployed backend URL.
+- Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL` (Render backend URL), and optionally `VITE_GROQ_API_KEY` as Vercel environment variables
 
-### 13.3 Streamlit Cloud (Python ML Demo)
+### Streamlit — Streamlit Cloud
 
-- Push to GitHub. Confirm `.env` and `data/raw/` are gitignored.
-- Create app at [share.streamlit.io](https://share.streamlit.io) pointing to `app.py`.
-- Add secrets under **Settings → Secrets**.
-
----
-
-## 14. Required Raw Datasets
-
-Place all raw dataset files in `data/raw/text/` before running `preprocess.py`. These files are gitignored.
-
-| Filename | Source |
-|---|---|
-| `enriched_posts.json` | [Kaggle](https://www.kaggle.com/) — LinkedIn enriched posts |
-| `Instagram_Reels_Data_Cleaned.csv` | [Kaggle](https://www.kaggle.com/) — Instagram Reels engagement |
-| `sentimentdataset.csv` | [Kaggle](https://www.kaggle.com/) — Social media sentiment |
-| `Social_Media_Advertising.csv` | [Kaggle](https://www.kaggle.com/) — Social media advertising |
-| `manual_dataset.csv` | Manual curation — platform-specific annotated posts |
-| `image_dataset.csv` | Manual — visual style annotations |
+- Point to `streamlit_app/app.py` in the repository root
+- Add `GROQ_API_KEY` under **Settings → Secrets** as `GROQ_API_KEY = "gsk_..."`
+- Confirm `data/raw/` and `data/models/` are gitignored before pushing
 
 ---
 
-## 15. Licence and Team
+## 14. Security Notes
 
-This project is released under the **MIT Licence**. Copyright Sourcesys Technologies.
-
-| Team Member | Role |
-|---|---|
-| Subasri B | ML Pipeline, Data Preprocessing, Model Training & Evaluation |
-| Gautham Krishnan K | Backend API, Groq Integration, Express Server Architecture |
-| Ashwin D | Frontend React Application, UI/UX, Supabase Integration |
-| Vinjarapu Ajay Kumar | Compliance System, Creator Studio, Content Planner |
+- All `.env` files are gitignored at root, `backend/`, and `frontend/` level. Never commit API keys.
+- `data/raw/` is gitignored. Raw datasets may contain personal or licensed data.
+- `data/models/tone_classifier/` is gitignored due to binary file size.
+- All Supabase tables enforce Row Level Security. Users cannot read, write, or delete rows they do not own.
+- The Express backend validates all required fields on every POST endpoint and returns HTTP 400 before any AI call is made.
+- CORS is permissive by default. For production, restrict the origin: `cors({ origin: 'https://socialyze-nu.vercel.app' })`.
+- `VITE_GROQ_API_KEY` is bundled into the browser build if set. Prefer proxying all AI calls through the backend in production.
 
 ---
 
-*This document reflects the production state of the codebase. All module descriptions are derived directly from source code analysis.*
+## 15. Team
+
+Subasri B | Gawtham Krishnan | Vinjarappu Ajay Kumar | Ashwin D
+
+---
+
+**Socialyze — Sourcesys Technologies** &nbsp;·&nbsp; MIT Licence &nbsp;·&nbsp; [socialyze-nu.vercel.app](https://socialyze-nu.vercel.app)
