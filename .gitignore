@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 .streamlit/secrets.toml
+streamlit_app/.streamlit/secrets.toml
 
 # ── Python ─────────────────────────────────────────────────────────
 __pycache__/
