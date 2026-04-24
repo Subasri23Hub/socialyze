@@ -1,4 +1,4 @@
-# Socialyze — AI Social Media Campaign Generator
+# Socialyze - AI Social Media Campaign Generator
 
 <div align="center">
 
