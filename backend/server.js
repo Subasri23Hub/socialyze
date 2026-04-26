@@ -495,6 +495,22 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
       parsed = null;
     }
 
+    // Guard: reject responses where ALL platform posts have empty hook AND caption.
+    // Groq sometimes fills only best_time / content_type and leaves hook + caption as ""
+    // which causes the UI to show only "BEST TIME" with no post content.
+    if (parsed && Array.isArray(parsed.platforms) && parsed.platforms.length > 0) {
+      const hasRealPlatformContent = parsed.platforms.some(p =>
+        Array.isArray(p.posts) && p.posts.some(post =>
+          String(post.hook    || "").trim().length > 0 ||
+          String(post.caption || "").trim().length > 0
+        )
+      );
+      if (!hasRealPlatformContent) {
+        console.warn("[/generate-post] Groq platforms array has no real hook/caption content \u2014 falling back.");
+        parsed = null;
+      }
+    }
+
     if (!parsed) {
       console.warn("[/generate-post] Groq returned null/placeholder. Serving domain fallback.");
       // Pool of 5 unique fallback variations — sliced to varCount so the
@@ -560,7 +576,15 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
       campaign_summary:   String(parsed.campaign_summary  || ""),
       brand_voice_guide:  String(parsed.brand_voice_guide || ""),
       audience_insight:   String(parsed.audience_insight  || ""),
-      platforms:          parsed.platforms || [],
+      // Strip any hollow posts before sending to frontend — posts where both
+      // hook and caption are empty strings would render as blank variation cards.
+      platforms: (parsed.platforms || []).map(p => ({
+        ...p,
+        posts: (Array.isArray(p.posts) ? p.posts : []).filter(post =>
+          String(post.hook    || "").trim().length > 0 ||
+          String(post.caption || "").trim().length > 0
+        ),
+      })),
       campaign_ideas:     parsed.campaign_ideas || [],
       kpis:               parsed.kpis        || [],
       budget_tips:        parsed.budget_tips  || [],

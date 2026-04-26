@@ -275,28 +275,49 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
         })
         if (res.ok) {
           const backendData = await res.json()
-          // Backend /generate-post returns { post_variations, caption_variations, hashtags, cta }
-          // Guard: reject placeholder responses where Groq echoed back template values
-          // e.g. post_variations: ["v1", "v2", "v3"] or ["c1", "c2", "c3"]
+
+          // Guard 1: reject placeholder responses ("v1", "c1", etc.)
           const PLACEHOLDER_RE = /^(v\d+|c\d+|post \d+|caption \d+|variation \d+|placeholder|example|sample)$/i
           const isPlaceholder = Array.isArray(backendData?.post_variations) &&
             backendData.post_variations.some(v => PLACEHOLDER_RE.test(String(v).trim()))
-          // Convert to the full campaign shape the UI expects
-          if (backendData && backendData.post_variations && !isPlaceholder) {
-            // If the backend returned a full platforms array (new format), use it directly
-            if (Array.isArray(backendData.platforms) && backendData.platforms.length > 0) {
-              parsed = {
+
+          // Guard 2: reject hollow platforms — posts where BOTH hook AND caption are empty.
+          // Use OR so a post with at least one non-empty field is considered real content.
+          const hasRealPlatformContent = (platforms) => {
+            if (!Array.isArray(platforms) || platforms.length === 0) return false
+            return platforms.some(p =>
+              Array.isArray(p.posts) && p.posts.some(post =>
+                String(post.hook || '').trim().length > 0 ||
+                String(post.caption || '').trim().length > 0
+              )
+            )
+          }
+
+          if (backendData && !isPlaceholder) {
+            // New format: backend returned full platforms array with real content
+            if (hasRealPlatformContent(backendData.platforms)) {
+              // Strip hollow posts (Groq filled best_time only, left hook+caption empty)
+              // before storing — prevents blank variation cards from being saved.
+              const cleanedPlatforms = backendData.platforms.map(p => ({
+                ...p,
+                posts: (Array.isArray(p.posts) ? p.posts : []).filter(post =>
+                  String(post.hook || '').trim().length > 0 ||
+                  String(post.caption || '').trim().length > 0
+                ),
+              }))
+              const stillHasContent = cleanedPlatforms.some(p => (p.posts || []).length > 0)
+              parsed = stillHasContent ? {
                 campaign_tagline:  backendData.campaign_tagline  || `${form.brand} — ${form.goal}`,
                 campaign_summary:  backendData.campaign_summary  || '',
                 brand_voice_guide: backendData.brand_voice_guide || '',
                 audience_insight:  backendData.audience_insight  || '',
-                platforms:         backendData.platforms,
+                platforms:         cleanedPlatforms,
                 campaign_ideas:    backendData.campaign_ideas    || [],
                 kpis:              backendData.kpis              || [],
                 budget_tips:       backendData.budget_tips       || [],
-              }
-            } else {
-              // Legacy flat format: reconstruct platforms map from post_variations
+              } : null
+            // Legacy flat format: reconstruct platforms map from post_variations
+            } else if (Array.isArray(backendData.post_variations) && backendData.post_variations.some(v => String(v).trim().length > 0)) {
               const platformsMap = {}
               const extractHook = (post) => {
                 if (!post) return ''
@@ -323,8 +344,6 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
                       cta:               backendData.cta || '',
                       content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
                       best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
-                      visual_direction:  '',
-                      engagement_tactic: '',
                     }
                   }),
                 }
@@ -340,6 +359,7 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
                 budget_tips:       [],
               }
             }
+            // else: both paths had no real content — fall through to Groq
           }
         }
       } catch (_) { /* backend unavailable — fall through */ }
