@@ -697,7 +697,11 @@ function IdeaSection({ label, text, accent }) {
 
 /* ── Custom Flow ── */
 function CustomFlowOutput({ data }) {
-  const [openWeeks, setOpenWeeks] = useState({})
+  const [openWeeks, setOpenWeeks] = useState(() => {
+    const allOpen = {}
+    ;(data?.posting_plan || []).forEach((_, i) => { allOpen[i] = true })
+    return allOpen
+  })
   function toggleWeek(i) { setOpenWeeks(prev => ({ ...prev, [i]: !prev[i] })) }
 
   return (
