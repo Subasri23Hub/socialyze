@@ -59,7 +59,7 @@ Generate all fields below. Return ONLY valid JSON. Start { end }.
     "trend_hashtags": [],
     "niche_hashtags": []
   },
-  "calendar_hooks": []
+  "calendar_hooks": ["Day/Week — specific content idea as a plain text sentence", "Day/Week — another plain text content idea"]
 }
 
 Requirements: 5 content_pillars, 1 platform_strategy entry per platform, 1 posting_plan entry per week of ${d.campaign_duration}, 6 sample_captions (1+ per platform), 3 brand/6 trend/8 niche hashtags, 8 calendar_hooks.`;
@@ -211,17 +211,37 @@ router.post("/", async (req, res) => {
 
       hashtags:       (parsed.hashtags       || []).slice(0, 20).map(String),
       // Groq sometimes returns calendar_hooks as objects instead of plain strings.
-      // Safely extract the text content from whatever shape the item is in.
-      calendar_hooks: (parsed.calendar_hooks || []).slice(0, 8).map(item => {
-        if (!item) return "";
-        if (typeof item === "string") return item;
-        if (typeof item === "object") {
-          return item.text || item.hook || item.content || item.idea ||
-                 item.description || item.name || item.title ||
-                 Object.values(item).find(v => typeof v === "string" && v.length > 5) || "";
+      // It may return shapes like { date: "2023-04-25" } with NO content field at all.
+      // Strategy: extract text, skip dates, fall back to hardcoded hooks if all else fails.
+      calendar_hooks: (() => {
+        const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+        const TEXT_FIELDS = ["hook", "text", "content", "idea", "description", "name", "title", "caption", "copy", "message"];
+
+        const extracted = (parsed.calendar_hooks || []).slice(0, 8).map(item => {
+          if (!item) return "";
+          if (typeof item === "string" && !DATE_RE.test(item.trim())) return item.trim();
+          if (typeof item === "object") {
+            for (const field of TEXT_FIELDS) {
+              if (item[field] && typeof item[field] === "string" && item[field].trim().length > 5 && !DATE_RE.test(item[field].trim())) {
+                return item[field].trim();
+              }
+            }
+            // Pick the longest non-date string value
+            const best = Object.values(item)
+              .filter(v => typeof v === "string" && v.trim().length > 5 && !DATE_RE.test(v.trim()))
+              .sort((a, b) => b.length - a.length)[0];
+            return best || "";
+          }
+          return "";
+        }).filter(Boolean);
+
+        // Nuclear fallback: if Groq returned nothing useful, use hardcoded hooks
+        if (extracted.length === 0) {
+          const fb = buildFallback(data);
+          return fb.calendar_hooks;
         }
-        return String(item);
-      }).filter(Boolean),
+        return extracted;
+      })(),
     };
 
     return res.json(sanitised);
