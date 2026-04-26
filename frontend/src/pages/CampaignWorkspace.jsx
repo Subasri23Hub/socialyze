@@ -846,7 +846,18 @@ function CustomFlowOutput({ data }) {
 
       {(data?.calendar_hooks || []).length > 0 && (
         <Section title="Content Calendar Hooks">
-          {data.calendar_hooks.map((hook, i) => <div key={i} className={styles.ideaCard}><div className={styles.ideaDesc}>{i + 1}. {hook}</div></div>)}
+          {data.calendar_hooks.map((hook, i) => {
+            // Groq sometimes returns objects instead of plain strings.
+            // Safely coerce to a string before rendering.
+            const hookText = typeof hook === 'string'
+              ? hook
+              : (hook?.text || hook?.hook || hook?.content || hook?.idea || hook?.description || hook?.name || JSON.stringify(hook))
+            return (
+              <div key={i} className={styles.ideaCard}>
+                <div className={styles.ideaDesc}>{i + 1}. {hookText}</div>
+              </div>
+            )
+          })}
         </Section>
       )}
     </div>
