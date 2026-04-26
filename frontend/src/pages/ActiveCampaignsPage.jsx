@@ -20,11 +20,13 @@ const PLATFORM_STYLE = {
   YouTube:   { bg: '#FEF2F2', color: '#991B1B' },
 }
 
-const THUMB_COLORS = [
-  'linear-gradient(135deg, #38BDF8 0%, #3B6BF5 60%, #6366F1 100%)',
-  'linear-gradient(135deg, #34D399 0%, #0EA5B0 60%, #0EA5E9 100%)',
-  'linear-gradient(135deg, #F472B6 0%, #C084FC 60%, #818CF8 100%)',
-  'linear-gradient(135deg, #FB923C 0%, #F59E0B 60%, #EAB308 100%)',
+const CARD_PALETTES = [
+  { bg: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', initial: '#6366F1', delete: '#4338CA' },
+  { bg: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)', initial: '#16A34A', delete: '#15803D' },
+  { bg: 'linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%)', initial: '#A855F7', delete: '#7E22CE' },
+  { bg: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)', initial: '#F97316', delete: '#C2410C' },
+  { bg: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)', initial: '#FB7185', delete: '#BE123C' },
+  { bg: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', initial: '#38BDF8', delete: '#0369A1' },
 ]
 
 function formatDate(iso) {
@@ -37,12 +39,6 @@ function formatDate(iso) {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-}
-
-function hashColor(str) {
-  let h = 0
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffffffff
-  return THUMB_COLORS[Math.abs(h) % THUMB_COLORS.length]
 }
 
 function formatCampaignName(raw) {
@@ -175,10 +171,11 @@ export default function ActiveCampaignsPage({ onOpenWorkspace }) {
       )}
 
       <div className={styles.grid}>
-        {filteredCampaigns.map(c => (
+        {filteredCampaigns.map((c, idx) => (
           <CampaignCard
             key={c.id}
             campaign={c}
+            palette={CARD_PALETTES[idx % CARD_PALETTES.length]}
             onClick={() => onOpenWorkspace && onOpenWorkspace(c.id)}
             onDelete={c._isSharedEdit ? undefined : (e => requestDelete(e, c.id))}
           />
@@ -218,15 +215,15 @@ export default function ActiveCampaignsPage({ onOpenWorkspace }) {
   )
 }
 
-function CampaignCard({ campaign, onClick, onDelete }) {
+function CampaignCard({ campaign, palette, onClick, onDelete }) {
   const { campaign_name, status, platforms, updated_at, output_count, _isSharedEdit } = campaign
   const sc  = STATUS_COLOR[status] || STATUS_COLOR.Draft
-  const grad = hashColor(campaign_name)
+  const pal = palette || CARD_PALETTES[0]
 
   return (
     <div className={styles.card} onClick={onClick} title="Open Campaign Workspace">
       {/* Thumbnail */}
-      <div className={styles.thumb} style={{ background: grad }}>
+      <div className={styles.thumb} style={{ background: pal.bg }}>
         <span className={styles.statusBadge} style={{ background: sc.bg, color: sc.color }}>
           {status}
         </span>
@@ -237,6 +234,7 @@ function CampaignCard({ campaign, onClick, onDelete }) {
             onClick={onDelete}
             title="Delete campaign"
             aria-label="Delete campaign"
+            style={{ color: pal.delete }}
           >
             <TrashIcon />
           </button>
@@ -256,7 +254,7 @@ function CampaignCard({ campaign, onClick, onDelete }) {
             ✦ Shared
           </span>
         )}
-        <div className={styles.thumbInitial}>
+        <div className={styles.thumbInitial} style={{ color: pal.initial }}>
           {campaign_name.charAt(0).toUpperCase()}
         </div>
       </div>

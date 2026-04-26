@@ -793,9 +793,9 @@ function CustomFlowOutput({ data }) {
                       )}
 
                       {/* fallback for old saved data */}
-                      {!w?.content_plan && w?.post_types && <div className={styles.weekTypes}>{w.post_types}</div>}
-                      {!w?.execution_tips && w?.sample_idea && <div style={{ fontSize: 12, marginTop: 4 }}>💡 {w.sample_idea}</div>}
-                      {!w?.execution_tips && w?.tactical_note && <div style={{ fontSize: 12, marginTop: 4 }}>⚡ {w.tactical_note}</div>}
+                      {!w?.content_plan?.length && w?.post_types && <div className={styles.weekTypes}>{w.post_types}</div>}
+                      {!w?.execution_tips?.length && w?.sample_idea && <div style={{ fontSize: 12, marginTop: 4 }}>💡 {w.sample_idea}</div>}
+                      {!w?.execution_tips?.length && w?.tactical_note && <div style={{ fontSize: 12, marginTop: 4 }}>⚡ {w.tactical_note}</div>}
 
                       {w?.ai_insights && (
                         <div style={{ marginTop: 4, background: '#F0F4FF', borderRadius: 7, padding: '7px 10px', fontSize: 11.5, color: '#3B6BF5', lineHeight: 1.55 }}>
