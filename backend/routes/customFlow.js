@@ -173,11 +173,18 @@ router.post("/", async (req, res) => {
       })),
 
       posting_plan: (parsed.posting_plan || []).slice(0, 8).map(p => ({
+        // Old schema fields
         week:          String(p.week          || ""),
-        focus:         String(p.focus         || ""),
+        focus:         String(p.focus         || p.theme || ""),
         post_types:    String(p.post_types    || ""),
         sample_idea:   String(p.sample_idea   || ""),
         tactical_note: String(p.tactical_note || ""),
+        // New schema fields — pass through as-is so frontend can render them
+        theme:          String(p.theme         || p.focus || ""),
+        goal:           String(p.goal          || p.focus || ""),
+        content_plan:   Array.isArray(p.content_plan)   ? p.content_plan.map(String)   : [],
+        execution_tips: Array.isArray(p.execution_tips) ? p.execution_tips.map(String) : [],
+        ai_insights:    String(p.ai_insights   || ""),
       })),
 
       // Accept both { platform, caption } objects and plain strings
@@ -203,7 +210,18 @@ router.post("/", async (req, res) => {
           },
 
       hashtags:       (parsed.hashtags       || []).slice(0, 20).map(String),
-      calendar_hooks: (parsed.calendar_hooks || []).slice(0, 8).map(String),
+      // Groq sometimes returns calendar_hooks as objects instead of plain strings.
+      // Safely extract the text content from whatever shape the item is in.
+      calendar_hooks: (parsed.calendar_hooks || []).slice(0, 8).map(item => {
+        if (!item) return "";
+        if (typeof item === "string") return item;
+        if (typeof item === "object") {
+          return item.text || item.hook || item.content || item.idea ||
+                 item.description || item.name || item.title ||
+                 Object.values(item).find(v => typeof v === "string" && v.length > 5) || "";
+        }
+        return String(item);
+      }).filter(Boolean),
     };
 
     return res.json(sanitised);
