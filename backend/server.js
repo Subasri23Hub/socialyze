@@ -497,38 +497,51 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
 
     if (!parsed) {
       console.warn("[/generate-post] Groq returned null/placeholder. Serving domain fallback.");
-      const fallbackVariations = [
+      // Pool of 5 unique fallback variations — sliced to varCount so the
+      // correct number is always returned regardless of what the user selected.
+      const ALL_FALLBACK_POSTS = [
         `${target_audience} don't need another ${product_or_service}.\n\nThey need one that actually works for how they live. ${brand_name} built ${product_or_service} around that truth.\n\n${call_to_action}.`,
         `Here's what happens after ${target_audience} try ${brand_name}'s ${product_or_service} for 7 days.\n\n${campaign_goal}. No complicated setup. No learning curve.\n\n${call_to_action}.`,
         `The ${product_or_service} category is crowded. Most of it is noise.\n\n${brand_name} is the one ${target_audience} keep recommending to each other. Here's why.\n\n${call_to_action}.`,
-      ].slice(0, varCount);
+        `Most ${product_or_service} brands talk about features. ${brand_name} talks about what actually changes for ${target_audience}.\n\nThere's a difference. Feel it.\n\n${call_to_action}.`,
+        `${target_audience} who tried ${brand_name}'s ${product_or_service} stopped looking for alternatives.\n\n${campaign_goal} — without the usual friction.\n\n${call_to_action}.`,
+      ];
+      const ALL_FALLBACK_HOOKS = [
+        `${target_audience} deserve better than this`,
+        `7 days with ${brand_name} changes things`,
+        `Why ${target_audience} keep choosing ${brand_name}`,
+        `${brand_name} said what others won't`,
+        `${target_audience} stopped looking after this`,
+      ];
+      const ALL_FALLBACK_CAPTIONS = [
+        `${campaign_goal}. ${call_to_action}.`,
+        `Built for ${target_audience}. ${product_or_service} by ${brand_name}.`,
+        `The ${product_or_service} ${target_audience} actually recommend. ${call_to_action}.`,
+        `${brand_name} — direct, specific, no filler. ${call_to_action}.`,
+        `${target_audience} trust ${brand_name} because it talks like an adult. ${call_to_action}.`,
+      ];
+      const fallbackVariations   = ALL_FALLBACK_POSTS.slice(0, varCount);
+      const fallbackHooks        = ALL_FALLBACK_HOOKS.slice(0, varCount);
+      const fallbackCaptions     = ALL_FALLBACK_CAPTIONS.slice(0, varCount);
       return res.json({
         post_variations:    fallbackVariations,
-        hook_variations:    [
-          `${target_audience} deserve better than this`,
-          `7 days with ${brand_name} changes things`,
-          `Why ${target_audience} keep choosing ${brand_name}`,
-        ].slice(0, varCount),
-        caption_variations: [
-          `${campaign_goal}. ${call_to_action}.`,
-          `Built for ${target_audience}. ${product_or_service} by ${brand_name}.`,
-          `The ${product_or_service} ${target_audience} actually recommend. ${call_to_action}.`,
-        ].slice(0, varCount),
+        hook_variations:    fallbackHooks,
+        caption_variations: fallbackCaptions,
         hashtags: [brandTag, prodTag, `#${target_audience.replace(/\s+/g, "")}`, "#ContentMarketing", "#DigitalMarketing", "#SocialMedia", "#Marketing", "#BrandStory", "#RealContent", "#MustSee"].slice(0, 10),
         cta: call_to_action,
-        campaign_tagline: `${brand_name} \u2014 built for ${target_audience}, not for the shelf`,
+        campaign_tagline: `${brand_name} — built for ${target_audience}, not for the shelf`,
         campaign_summary: `This campaign speaks directly to ${target_audience}'s real experience with ${product_or_service}. Every post leads with honesty and earns the CTA.`,
-        brand_voice_guide: `${brand_name} sounds like a smart friend who knows their stuff \u2014 direct, specific, never preachy. It never says \u201cElevate\u201d or \u201cEmpower\u201d.`,
+        brand_voice_guide: `${brand_name} sounds like a smart friend who knows their stuff — direct, specific, never preachy. It never says "Elevate" or "Empower".`,
         audience_insight: `${target_audience} have seen every claim in this category. They trust brands that skip the marketing voice and talk to them like adults.`,
         platforms: platformList.map(p => ({
           platform_name: p,
           posts: fallbackVariations.map((post, i) => ({
-            hook:         ["${target_audience} deserve better than this", "7 days with ${brand_name} changes things", "Why ${target_audience} keep choosing ${brand_name}"][i] || post.split("\n")[0],
+            hook:         fallbackHooks[i] || post.split("\n")[0],
             caption:      post,
             hashtags:     [brandTag, prodTag, `#${p}Marketing`, "#RealContent", "#MustSee"],
             cta:          call_to_action,
             content_type: CONTENT_TYPES[p] || "Post",
-            best_time:    BEST_TIMES[p] || "Weekdays, 9 AM\u20136 PM",
+            best_time:    BEST_TIMES[p] || "Weekdays, 9 AM–6 PM",
           })),
         })),
         campaign_ideas: [],
