@@ -69,9 +69,9 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     }
   }
 
-  // FIX 2: Normalise the parsed/fallback result into a consistent shape.
-  // Handles both array-of-objects and keyed-object formats for `platforms`.
-  function shapeResult(parsed, brandName, productName) {
+  // Normalise result into consistent shape.
+  // Handles both Groq array format and fallback keyed-object format for `platforms`.
+  function shapeResult(parsed) {
     if (!parsed) return null
 
     let platformsMap = {}
@@ -88,7 +88,7 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
       platformsMap = parsed.platforms
     }
 
-    // Ensure every selected platform has at least an empty entry so tabs render
+    // Ensure every selected platform has at least an empty entry so tabs always render
     for (const p of selectedPlatforms) {
       if (!platformsMap[p]) {
         platformsMap[p] = { posts: [] }
@@ -98,8 +98,8 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     return {
       ...parsed,
       platforms:          platformsMap,
-      campaign_name:      brandName  || parsed.campaign_name      || 'Campaign',
-      product_or_service: productName || parsed.product_or_service || '',
+      campaign_name:      form.brand   || parsed.campaign_name      || 'Campaign',
+      product_or_service: form.product || parsed.product_or_service || '',
     }
   }
 
@@ -159,18 +159,68 @@ Return ONLY valid JSON. Start { end }.
   "kpis":[],"budget_tips":[]
 }`
 
-      // ── Step 1: Try Groq ────────────────────────────────────────────────
       let parsed = null
-      try {
-        parsed = await generateWithFallback(prompt, null, {
-          groq: { temperature: 1.0, maxOutputTokens: 1800 },
-        })
-      } catch (_) {
-        // Groq threw — will fall through to domain fallback below
-      }
-      setRetryStatus('')
 
-      // ── Step 2: Domain fallback if Groq unavailable or returned null ────
+      // ── Step 1: Try backend (Render) — same pattern as CustomFlowPanel ──
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/generate-post`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brand_name:         form.brand,
+            product_or_service: form.product,
+            campaign_goal:      form.goal,
+            target_audience:    form.audience,
+            key_message:        form.keywords || form.goal,
+            call_to_action:     `Learn more about ${form.product}`,
+            tone:               form.tone,
+            platform:           selectedPlatforms[0] || 'Instagram',
+          }),
+        })
+        if (res.ok) {
+          const backendData = await res.json()
+          // Backend /generate-post returns { post_variations, caption_variations, hashtags, cta }
+          // Convert to the full campaign shape the UI expects
+          if (backendData && backendData.post_variations) {
+            const platformsMap = {}
+            for (const p of selectedPlatforms) {
+              platformsMap[p] = {
+                posts: backendData.post_variations.map((post, i) => ({
+                  hook:              post.split('\n')[0] || post,
+                  caption:           post,
+                  hashtags:          backendData.hashtags || [],
+                  cta:               backendData.cta || '',
+                  content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
+                  best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
+                  visual_direction:  '',
+                  engagement_tactic: '',
+                })),
+              }
+            }
+            parsed = {
+              campaign_tagline:  backendData.caption_variations?.[0] || `${form.brand} — ${form.goal}`,
+              campaign_summary:  backendData.caption_variations?.[1] || '',
+              brand_voice_guide: backendData.caption_variations?.[2] || '',
+              audience_insight:  '',
+              platforms:         platformsMap,
+              campaign_ideas:    [],
+              kpis:              [],
+              budget_tips:       [],
+            }
+          }
+        }
+      } catch (_) { /* backend unavailable — fall through */ }
+
+      // ── Step 2: Try frontend Groq directly ──────────────────────────────
+      if (!parsed) {
+        try {
+          parsed = await generateWithFallback(prompt, null, {
+            groq: { temperature: 1.0, maxOutputTokens: 1800 },
+          })
+        } catch (_) { /* Groq failed — fall through to static fallback */ }
+      }
+
+      // ── Step 3: Static domain fallback ──────────────────────────────────
       if (!parsed) {
         parsed = postGeneratorFallback({
           brand:             form.brand,
@@ -183,8 +233,10 @@ Return ONLY valid JSON. Start { end }.
         })
       }
 
-      // ── Step 3: Normalise into consistent shape ─────────────────────────
-      const shaped = shapeResult(parsed, form.brand, form.product)
+      setRetryStatus('')
+
+      // ── Step 4: Normalise into consistent render shape ───────────────────
+      const shaped = shapeResult(parsed)
 
       if (!shaped) {
         setError('Generation failed. Please try again.')
@@ -196,7 +248,7 @@ Return ONLY valid JSON. Start { end }.
       setResult(shaped)
       setActiveTab(firstTab)
     } catch (err) {
-      setError(err.message || 'Generation failed. Please try again.')
+      setError('Generation failed. Please try again.')
     }
 
     setLoading(false)
