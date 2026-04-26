@@ -81,6 +81,16 @@ function safeParseJSON(raw) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// isPlaceholderResponse — detect if Groq echoed back our example skeleton
+// instead of generating real content (e.g. ["v1","v2","v3"] or ["c1","c2","c3"])
+// ─────────────────────────────────────────────────────────────────────────────
+function isPlaceholderResponse(parsed) {
+  if (!parsed || !Array.isArray(parsed.post_variations)) return false;
+  const PLACEHOLDER_PATTERNS = /^(v\d+|c\d+|post \d+|caption \d+|variation \d+|placeholder|example|sample)$/i;
+  return parsed.post_variations.some(v => PLACEHOLDER_PATTERNS.test(String(v).trim()));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // callGroq — single Groq call, no retries.
 // Returns parsed JSON object on success, or null on any failure.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -373,23 +383,53 @@ app.post("/generate-post", async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(", ")}` });
     }
 
-    const toneVoice    = getToneVoice(tone);
+    const toneVoice = getToneVoice(tone);
+    const brandTag  = `#${brand_name.replace(/\s+/g, "")}`;
+    const prodTag   = `#${product_or_service.replace(/\s+/g, "")}`;
 
-    const prompt = `Social media strategist for ${platform}.
-Brand: ${brand_name} | Product: ${product_or_service} | Goal: ${campaign_goal}
-Audience: ${target_audience} | Tone: ${tone} (${toneVoice}) | Key Message: ${key_message} | CTA: ${call_to_action}
+    // FIX: Prompt uses NO example placeholder values (no "v1","v2","v3","c1" etc.)
+    // Groq was previously echoing those back verbatim instead of generating real content.
+    const prompt = `You are a social media Creative Director. Write real, publish-ready content. No placeholders. No template labels.
 
-Write 3 post variations, 3 captions, 10 hashtags, 1 CTA for ${platform}. Each post must be platform-native, hook-first, no corporate speak.
+Brand: ${brand_name}
+Product/Service: ${product_or_service}
+Campaign Goal: ${campaign_goal}
+Target Audience: ${target_audience}
+Tone: ${tone} — ${toneVoice}
+Key Message: ${key_message}
+Call To Action: ${call_to_action}
+Platform: ${platform}
 
-Return ONLY valid JSON. Start { end }.
-{"post_variations":["v1","v2","v3"],"caption_variations":["c1","c2","c3"],"hashtags":["#t1","#t2","#t3","#t4","#t5","#t6","#t7","#t8","#t9","#t10"],"cta":"CTA line"}`;
+Write exactly 3 full, publish-ready post variations for ${platform}. Each post must:
+- Open with a scroll-stopping hook specific to ${brand_name}
+- Use ${platform}-native language, length, and energy
+- Reference ${product_or_service} and ${key_message} specifically — no generic filler
+- End with: ${call_to_action}
+- Sound like a real person, not a marketing bot
 
-    const parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 900 });
+Also write:
+- 3 short captions (1-2 lines each, punchy, platform-native)
+- 10 relevant hashtags starting with # (mix of brand, niche, trending)
+- 1 strong CTA line
+
+Return ONLY a valid JSON object. No explanation before or after.
+{
+  "post_variations": ["<full post 1>", "<full post 2>", "<full post 3>"],
+  "caption_variations": ["<caption 1>", "<caption 2>", "<caption 3>"],
+  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6", "#tag7", "#tag8", "#tag9", "#tag10"],
+  "cta": "<strong CTA line>"
+}`;
+
+    let parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 1200 });
+
+    // FIX: Detect if Groq echoed placeholder values and treat it as a failed response
+    if (parsed && isPlaceholderResponse(parsed)) {
+      console.warn("[/generate-post] Groq returned placeholder values — falling back.");
+      parsed = null;
+    }
 
     if (!parsed) {
-      console.warn("[/generate-post] Groq returned null. Serving domain fallback.");
-      const brandTag   = `#${brand_name.replace(/\s+/g, "")}`;
-      const productTag = `#${product_or_service.replace(/\s+/g, "")}`;
+      console.warn("[/generate-post] Groq returned null/placeholder. Serving domain fallback.");
       return res.json({
         post_variations: [
           `Nobody talks about this, but ${key_message}. 👀\n\n${brand_name}'s ${product_or_service} was built for exactly that.\n\n${call_to_action} — link in bio.`,
@@ -401,7 +441,7 @@ Return ONLY valid JSON. Start { end }.
           `Built for ${target_audience}. ${product_or_service} by ${brand_name}.`,
           `Stop scrolling. ${key_message}. ${call_to_action}.`,
         ],
-        hashtags: [brandTag, productTag, "#SocialMedia", "#Marketing", "#TrendingNow", "#ContentMarketing", "#DigitalMarketing", `#${target_audience.replace(/\s+/g, "")}`, "#RelatableContent", "#MustSee"].slice(0, 10),
+        hashtags: [brandTag, prodTag, "#SocialMedia", "#Marketing", "#TrendingNow", "#ContentMarketing", "#DigitalMarketing", `#${target_audience.replace(/\s+/g, "")}`, "#RelatableContent", "#MustSee"].slice(0, 10),
         cta: call_to_action,
       });
     }

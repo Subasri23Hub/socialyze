@@ -180,8 +180,13 @@ Return ONLY valid JSON. Start { end }.
         if (res.ok) {
           const backendData = await res.json()
           // Backend /generate-post returns { post_variations, caption_variations, hashtags, cta }
+          // Guard: reject placeholder responses where Groq echoed back template values
+          // e.g. post_variations: ["v1", "v2", "v3"] or ["c1", "c2", "c3"]
+          const PLACEHOLDER_RE = /^(v\d+|c\d+|post \d+|caption \d+|variation \d+|placeholder|example|sample)$/i
+          const isPlaceholder = Array.isArray(backendData?.post_variations) &&
+            backendData.post_variations.some(v => PLACEHOLDER_RE.test(String(v).trim()))
           // Convert to the full campaign shape the UI expects
-          if (backendData && backendData.post_variations) {
+          if (backendData && backendData.post_variations && !isPlaceholder) {
             const platformsMap = {}
             for (const p of selectedPlatforms) {
               platformsMap[p] = {
