@@ -30,6 +30,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 // ─────────────────────────────────────────────────────────────────────────────
 // generateWithFallback — single Groq call, no retries.
 // Returns parsed JSON object on success, null on any failure.
+// NEVER throws — always returns null on error so callers can use their fallback.
 //
 // @param {string}   prompt
 // @param {object}   [schema]     – unused, kept for call-site compatibility
@@ -42,7 +43,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 export async function generateWithFallback(prompt, schema = null, options = {}) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
   if (!apiKey) {
-    console.error('[Groq] ❌ VITE_GROQ_API_KEY is not set in frontend/.env')
+    console.warn('[Groq] VITE_GROQ_API_KEY is not configured — using offline fallback.')
     return null
   }
 
@@ -71,7 +72,7 @@ export async function generateWithFallback(prompt, schema = null, options = {}) 
     if (!res.ok) {
       let errBody = ''
       try { errBody = await res.text() } catch { /* ignore */ }
-      console.error(`[Groq] ❌ HTTP ${res.status}: ${errBody.slice(0, 300)}`)
+      console.warn(`[Groq] HTTP ${res.status} — using offline fallback. Detail: ${errBody.slice(0, 200)}`)
       return null
     }
 
@@ -79,7 +80,7 @@ export async function generateWithFallback(prompt, schema = null, options = {}) 
     const raw  = data?.choices?.[0]?.message?.content || ''
 
     if (!raw) {
-      console.error('[Groq] ❌ Empty content in response.')
+      console.warn('[Groq] Empty content in response — using offline fallback.')
       return null
     }
 
@@ -87,7 +88,7 @@ export async function generateWithFallback(prompt, schema = null, options = {}) 
     const parsed = safeParseJSON(raw)
 
     if (!parsed) {
-      console.error('[Groq] ❌ Response was not valid JSON. Raw (first 300 chars):', raw.slice(0, 300))
+      console.warn('[Groq] Response was not valid JSON — using offline fallback.')
       return null
     }
 
@@ -95,7 +96,7 @@ export async function generateWithFallback(prompt, schema = null, options = {}) 
     return parsed
 
   } catch (err) {
-    console.error('[Groq] ❌ Fetch error:', err.message)
+    console.warn('[Groq] Network error — using offline fallback.', err.message)
     return null
   }
 }

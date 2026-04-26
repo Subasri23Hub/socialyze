@@ -38,6 +38,30 @@ export default function CustomFlowPanel({ onClose, onSaved, onNoBrief, sharedCam
       .replace(/\$\{d\.[^}]+\}/g, '')  // strip any remaining ${d.xxx} patterns
       .replace(/\s{2,}/g, ' ').trim()
   }
+
+  // FIX 1: Safely coerce any value to a plain string for rendering.
+  // Groq sometimes returns objects instead of strings in arrays.
+  function coerceToString(val) {
+    if (val === null || val === undefined) return ''
+    if (typeof val === 'string') return val
+    if (typeof val === 'object') {
+      // Try common text fields
+      return val.text || val.hook || val.content || val.idea || val.description || val.name || JSON.stringify(val)
+    }
+    return String(val)
+  }
+
+  // FIX 1: Safely coerce a hashtag value to a string (e.g. "#tag")
+  function coerceHashtag(val) {
+    if (val === null || val === undefined) return ''
+    if (typeof val === 'string') return val
+    if (typeof val === 'object') {
+      // Groq sometimes returns { tag: "#foo", explanation: "..." }
+      return val.tag || val.hashtag || val.name || val.text || ''
+    }
+    return String(val)
+  }
+
   function togglePlat(p) {
     setSelectedPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
   }
@@ -154,9 +178,9 @@ For each week provide:
 
 8. SAMPLE CAPTIONS (6 total, platform-labeled): Write 6 full, publish-ready captions. At least one per major selected platform. Include hooks, body copy, hashtags, and CTA. These should be immediately usable by a content team.
 
-9. HASHTAG STRATEGY: 20 hashtags organized into 3 tiers — (a) Brand hashtags (2–3, unique to this campaign), (b) Trend hashtags (5–7, high-volume relevant), (c) Niche hashtags (8–10, community-specific, low-competition). Label each tier clearly.
+9. HASHTAG STRATEGY: 20 hashtags organized into 3 tiers — (a) Brand hashtags (2–3, unique to this campaign), (b) Trend hashtags (5–7, high-volume relevant), (c) Niche hashtags (8–10, community-specific, low-competition). Label each tier clearly. IMPORTANT: Return each hashtag as a plain string like "#hashtag", NOT as an object.
 
-10. CONTENT CALENDAR HOOKS: 8 specific content ideas tied to real cultural moments, trending topics, or weekly content formats (e.g. "Monday Motivation series", "Wednesday myth-bust", "Friday behind-the-scenes") that fit this campaign's ${form.campaign_duration} run.
+10. CONTENT CALENDAR HOOKS: 8 specific content ideas tied to real cultural moments, trending topics, or weekly content formats. IMPORTANT: Return each hook as a plain string sentence, NOT as an object.
 
 Every section should be specific to ${form.brand_name} and ${form.product_or_service}. Generic filler is not acceptable. Write as if your agency's next retainer depends on this brief.`
 
@@ -244,6 +268,26 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
       if (!data) {
         data = customFlowFallback({ ...form, platforms: selectedPlatforms })
       }
+
+      // FIX 1: Normalise hashtag_strategy — ensure all entries are plain strings
+      if (data && data.hashtag_strategy) {
+        const hs = data.hashtag_strategy
+        if (Array.isArray(hs.brand_hashtags)) {
+          hs.brand_hashtags = hs.brand_hashtags.map(coerceHashtag).filter(Boolean)
+        }
+        if (Array.isArray(hs.trend_hashtags)) {
+          hs.trend_hashtags = hs.trend_hashtags.map(coerceHashtag).filter(Boolean)
+        }
+        if (Array.isArray(hs.niche_hashtags)) {
+          hs.niche_hashtags = hs.niche_hashtags.map(coerceHashtag).filter(Boolean)
+        }
+      }
+
+      // FIX 1: Normalise calendar_hooks — ensure all entries are plain strings
+      if (data && Array.isArray(data.calendar_hooks)) {
+        data.calendar_hooks = data.calendar_hooks.map(coerceToString).filter(Boolean)
+      }
+
       setResult(data)
       // Open all weeks by default so content is immediately visible
       if (data?.posting_plan) {
@@ -488,7 +532,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                               <div className={styles.weekSectionLabel}>Content Plan</div>
                               {week.content_plan.map((item, j) => (
                                 <div key={j} className={styles.weekBullet}>
-                                  <span className={styles.weekBulletDot} />{item}
+                                  <span className={styles.weekBulletDot} />{coerceToString(item)}
                                 </div>
                               ))}
                             </div>
@@ -512,7 +556,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                             <div className={styles.weekSection}>
                               <div className={styles.weekSectionLabel}>Execution Tips</div>
                               {week.execution_tips.map((tip, j) => (
-                                <div key={j} className={styles.weekTactic}>⚡ {tip}</div>
+                                <div key={j} className={styles.weekTactic}>⚡ {coerceToString(tip)}</div>
                               ))}
                             </div>
                           )}
@@ -528,7 +572,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                           {/* NEW SCHEMA: ai_insights */}
                           {week.ai_insights && (
                             <div className={styles.weekInsight}>
-                              <span className={styles.weekInsightIcon}>🧠</span>{week.ai_insights}
+                              <span className={styles.weekInsightIcon}>🧠</span>{coerceToString(week.ai_insights)}
                             </div>
                           )}
 
@@ -577,7 +621,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                       <div className={styles.hashTierLabel}>🏷 Brand Hashtags</div>
                       <div className={styles.hashGrid}>
                         {result.hashtag_strategy.brand_hashtags.map((tag, i) => (
-                          <span key={i} className={`${styles.hashTag} ${styles.hashBrand}`}>{tag}</span>
+                          <span key={i} className={`${styles.hashTag} ${styles.hashBrand}`}>{coerceHashtag(tag)}</span>
                         ))}
                       </div>
                     </div>
@@ -587,7 +631,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                       <div className={styles.hashTierLabel}>📈 Trend Hashtags</div>
                       <div className={styles.hashGrid}>
                         {result.hashtag_strategy.trend_hashtags.map((tag, i) => (
-                          <span key={i} className={`${styles.hashTag} ${styles.hashTrend}`}>{tag}</span>
+                          <span key={i} className={`${styles.hashTag} ${styles.hashTrend}`}>{coerceHashtag(tag)}</span>
                         ))}
                       </div>
                     </div>
@@ -597,7 +641,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                       <div className={styles.hashTierLabel}>🎯 Niche Hashtags</div>
                       <div className={styles.hashGrid}>
                         {result.hashtag_strategy.niche_hashtags.map((tag, i) => (
-                          <span key={i} className={`${styles.hashTag} ${styles.hashNiche}`}>{tag}</span>
+                          <span key={i} className={`${styles.hashTag} ${styles.hashNiche}`}>{coerceHashtag(tag)}</span>
                         ))}
                       </div>
                     </div>
@@ -608,7 +652,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                         ...(result.hashtag_strategy.brand_hashtags || []),
                         ...(result.hashtag_strategy.trend_hashtags || []),
                         ...(result.hashtag_strategy.niche_hashtags || []),
-                      ]
+                      ].map(coerceHashtag).filter(Boolean)
                       navigator.clipboard.writeText(all.join(' '))
                     }}>
                     Copy all hashtags
@@ -618,7 +662,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
                 // Fallback: old flat hashtag array
                 <div className={styles.hashGrid}>
                   {(result.hashtags || []).map((tag, i) => (
-                    <span key={i} className={styles.hashTag}>{tag}</span>
+                    <span key={i} className={styles.hashTag}>{coerceHashtag(tag)}</span>
                   ))}
                 </div>
               )}
@@ -631,7 +675,7 @@ Every section should be specific to ${form.brand_name} and ${form.product_or_ser
               {(result.calendar_hooks || []).map((hook, i) => (
                 <div key={i} className={styles.calendarCard}>
                   <div className={styles.calendarNum}>{i + 1}</div>
-                  <div className={styles.calendarText}>{hook}</div>
+                  <div className={styles.calendarText}>{coerceToString(hook)}</div>
                 </div>
               ))}
             </div>

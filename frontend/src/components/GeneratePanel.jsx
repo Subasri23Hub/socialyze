@@ -69,6 +69,40 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     }
   }
 
+  // FIX 2: Normalise the parsed/fallback result into a consistent shape.
+  // Handles both array-of-objects and keyed-object formats for `platforms`.
+  function shapeResult(parsed, brandName, productName) {
+    if (!parsed) return null
+
+    let platformsMap = {}
+
+    if (Array.isArray(parsed.platforms)) {
+      // Groq format: [{ platform_name: "Instagram", posts: [...] }, ...]
+      for (const p of parsed.platforms) {
+        if (p && p.platform_name) {
+          platformsMap[p.platform_name] = { posts: Array.isArray(p.posts) ? p.posts : [] }
+        }
+      }
+    } else if (parsed.platforms && typeof parsed.platforms === 'object') {
+      // Fallback format: { Instagram: { posts: [...] }, LinkedIn: {...} }
+      platformsMap = parsed.platforms
+    }
+
+    // Ensure every selected platform has at least an empty entry so tabs render
+    for (const p of selectedPlatforms) {
+      if (!platformsMap[p]) {
+        platformsMap[p] = { posts: [] }
+      }
+    }
+
+    return {
+      ...parsed,
+      platforms:          platformsMap,
+      campaign_name:      brandName  || parsed.campaign_name      || 'Campaign',
+      product_or_service: productName || parsed.product_or_service || '',
+    }
+  }
+
   async function generate() {
     if (!form.brand || !form.product || !form.goal) {
       setError('Please fill in Brand, Product, and Campaign Goal.')
@@ -84,8 +118,6 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     setLoading(true)
     setResult(null)
     setSaveMsg('')
-
-    let shaped = null
 
     try {
       const platformHints = {
@@ -127,13 +159,18 @@ Return ONLY valid JSON. Start { end }.
   "kpis":[],"budget_tips":[]
 }`
 
-      // ── Call Groq ─────────────────────────────────────────────────────────
-      let parsed = await generateWithFallback(prompt, null, {
-        groq: { temperature: 1.0, maxOutputTokens: 1800 },
-      })
+      // ── Step 1: Try Groq ────────────────────────────────────────────────
+      let parsed = null
+      try {
+        parsed = await generateWithFallback(prompt, null, {
+          groq: { temperature: 1.0, maxOutputTokens: 1800 },
+        })
+      } catch (_) {
+        // Groq threw — will fall through to domain fallback below
+      }
       setRetryStatus('')
 
-      // ── Domain-specific fallback if Groq unavailable ──────────────────────
+      // ── Step 2: Domain fallback if Groq unavailable or returned null ────
       if (!parsed) {
         parsed = postGeneratorFallback({
           brand:             form.brand,
@@ -146,36 +183,22 @@ Return ONLY valid JSON. Start { end }.
         })
       }
 
-      if (parsed && Array.isArray(parsed.platforms)) {
-        const platformsMap = {}
-        for (const p of parsed.platforms) {
-          if (p.platform_name) {
-            platformsMap[p.platform_name] = { posts: p.posts || [] }
-          }
-        }
-        shaped = {
-          ...parsed,
-          platforms:          platformsMap,
-          campaign_name:      form.brand,
-          product_or_service: form.product,
-        }
-      } else {
-        shaped = {
-          ...parsed,
-          campaign_name:      form.brand,
-          product_or_service: form.product,
-        }
+      // ── Step 3: Normalise into consistent shape ─────────────────────────
+      const shaped = shapeResult(parsed, form.brand, form.product)
+
+      if (!shaped) {
+        setError('Generation failed. Please try again.')
+        setLoading(false)
+        return
       }
+
+      const firstTab = Object.keys(shaped.platforms || {})[0] || null
+      setResult(shaped)
+      setActiveTab(firstTab)
     } catch (err) {
-      setRetryStatus('')
-      setError(err.message || 'Generation failed. Make sure VITE_GROQ_API_KEY is set in your frontend/.env file.')
-      setLoading(false)
-      return
+      setError(err.message || 'Generation failed. Please try again.')
     }
 
-    const firstTab = Object.keys(shaped.platforms || {})[0] || null
-    setResult(shaped)
-    setActiveTab(firstTab)
     setLoading(false)
   }
 
@@ -218,7 +241,7 @@ Return ONLY valid JSON. Start { end }.
       <div className={styles.panelHdr}>
         <div>
           <div className={styles.panelTitle}>AI Post Generator</div>
-          <div className={styles.panelSub}>Agency-grade campaigns — powered by Groq</div>
+          <div className={styles.panelSub}>Agency-grade campaigns — powered by AI</div>
         </div>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
       </div>
