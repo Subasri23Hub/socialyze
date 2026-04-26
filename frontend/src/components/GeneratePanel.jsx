@@ -120,43 +120,137 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
     setSaveMsg('')
 
     try {
-      const platformHints = {
-        Instagram: 'Reels-first, hook line 1, 3-5 hashtags, save-worthy carousels',
-        Twitter:   'Under 280 chars, opinionated hook, 1-2 hashtags, thread potential',
-        LinkedIn:  'Personal story hook, data-backed, 3 hashtags max, end with question',
-        Facebook:  'Community-first, longer story, shareable emotional angle, 2-3 hashtags',
-        TikTok:    'Hook in 2s, POV/challenge format, raw UGC energy, trending audio ref',
-        YouTube:   'Title = 90% clicks, hook in 30s, description SEO, end-screen CTA',
+      // ── Prompt-engineering constants (mirrors backend config.js) ──────────
+      const PLATFORM_RULES = {
+        Instagram: 'Reels-first. Hook in line 1. Hard line-break after every 1–2 sentences. Emojis used intentionally. 4–6 hashtags at the end. Save-worthy. Best time: Tue–Fri 7–9 AM or 6–9 PM.',
+        Twitter:   'Under 280 chars. Punchy, opinionated opener. Wit > polish. 1–2 inline hashtags only. No corporate speak. Thread-bait or reply-bait question at the end.',
+        LinkedIn:  'Thought-leadership angle. Open with a personal or counterintuitive insight. Line break every 1–2 lines. Data or specifics. 3 hashtags MAX at the end. Close with a genuine open question.',
+        Facebook:  'Conversational community tone. Storytelling arc. 2–3 hashtags. Shareable emotional hook. Tag-a-friend or poll prompt encouraged.',
+        TikTok:    'Hook in first 2 seconds — POV / "nobody talks about this" / "wait for it" format. Raw, native, conversational. Trending audio nod. Challenge or duet potential.',
+        YouTube:   'Hook viewer in first 30s. Title drives 90% of clicks. Description uses keywords naturally. Include timestamps. End-screen CTA.',
       }
 
-      const platLines = selectedPlatforms
-        .map(p => `${p}: ${platformHints[p] || 'platform-native best practices'}`)
+      const TONE_GUIDE = {
+        Casual:        'Relaxed, like texting a friend. Short sentences. Contractions always. Relatable and low-pressure.',
+        Professional:  'Authoritative but human. Precise language. No buzzwords. Commands trust without being stiff.',
+        Inspirational: 'Speaks to identity and aspiration, not features. Uplifting without being preachy. Makes the reader feel capable.',
+        Humorous:      'Witty and self-aware. Timing and subverted expectations. Never try-hard. One well-placed joke beats three forced ones.',
+        Urgent:        'Every word earns its place. Short, direct, action-driving. Creates genuine urgency without panic or desperation.',
+        Bold:          'Zero apology. Short punchy declarations. Confident enough to polarise. Says what others won\'t.',
+        Empathetic:    'Warm and human-first. Acknowledges the struggle before offering anything. Makes the reader feel seen.',
+        Witty:         'Clever wordplay and unexpected angles. Smart, not silly. Cultural references used precisely.',
+      }
+
+      const CAMPAIGN_STRATEGY = {
+        'Product Launch':    'Lead with the problem it solves — never the product name first. Show transformation, not features. Make the reader feel the before and after.',
+        'Brand Awareness':   'Build emotional memory. Story > specs. Make them feel something first, then remember you. Avoid hard selling.',
+        'Lead Generation':   'Value-first. What does the audience get before giving anything? Reverse the ask. Make the CTA feel like an opportunity, not a demand.',
+        'Engagement Boost':  'Start debate, ask genuine questions, invite participation. Reach is secondary to conversation. Polls and open-ended prompts work.',
+        'Content Promotion': 'Tease — don\'t give it all away. Create enough desire that clicking feels inevitable. Intrigue > information.',
+        'Seasonal Sale':     'Time-pressure + real exclusivity + emotional resonance with the season. Avoid generic countdown language.',
+        'Event Promotion':   'FOMO mechanics. Behind-the-scenes access. Community identity and shared experience. Make not-attending feel like a miss.',
+        'Rebranding':        'Honour the past, excite about the future. Address the \'why\' first. Earn trust before asking for re-engagement.',
+      }
+
+      const CONTENT_TYPES = {
+        Instagram: 'Reel / Carousel',
+        Twitter:   'Tweet',
+        LinkedIn:  'Article / Carousel',
+        Facebook:  'Video Post',
+        TikTok:    'Short-form Video',
+        YouTube:   'Long-form / Shorts',
+      }
+
+      const BEST_TIMES = {
+        Instagram: 'Tue–Fri, 7–9 AM or 6–9 PM',
+        Twitter:   'Weekdays, 8–10 AM or 6–8 PM',
+        LinkedIn:  'Tue–Thu, 7–9 AM or 12–1 PM',
+        Facebook:  'Wed–Fri, 1–3 PM',
+        TikTok:    'Daily, 6–10 PM',
+        YouTube:   'Fri–Sun, 2–4 PM',
+      }
+
+      const toneGuide       = TONE_GUIDE[form.tone]       || 'Authentic and audience-first.'
+      const strategyGuide   = CAMPAIGN_STRATEGY[form.campaignType] || 'Clear, audience-first messaging.'
+      const keywordsLine    = form.keywords ? `Keywords / Themes: ${form.keywords}` : ''
+
+      const platformBlocks = selectedPlatforms
+        .map(p => `  - ${p}: ${PLATFORM_RULES[p] || 'Write natively for this platform.'}`)
         .join('\n')
 
-      const prompt = `Social media Creative Director. Agency-quality campaign output only.
+      // Build the variation-count instruction dynamically
+      const varCount = form.variations || 3
 
-Brief: ${form.brand} | ${form.product} | ${form.campaignType} | Goal: ${form.goal} | Audience: ${form.audience} | Tone: ${form.tone}${form.keywords ? ` | Keywords: ${form.keywords}` : ''}
-Platforms: ${selectedPlatforms.join(', ')} | ${form.variations} variation(s) per platform
+      // Build the JSON schema example for one platform dynamically so Groq
+      // knows exactly how many posts per platform we expect
+      const examplePosts = Array.from({ length: varCount }, (_, i) => (
+        `{"hook":"<scroll-stopping opener — max 10 words>","caption":"<2–4 sentences expanding the hook — specific to ${form.brand} and ${form.product}>","hashtags":["#tag1","#tag2","#tag3","#tag4","#tag5"],"cta":"<single clear action>","content_type":"${CONTENT_TYPES[selectedPlatforms[0]] || 'Post'}","best_time":"${BEST_TIMES[selectedPlatforms[0]] || 'Weekdays, 9 AM–6 PM'}"}`
+      )).join(',')
 
-Platform rules:
-${platLines}
+      const platformSchema = selectedPlatforms
+        .map(p => `{"platform_name":"${p}","posts":[${Array.from({ length: varCount }, (_, i) => (
+          `{"hook":"","caption":"","hashtags":[],"cta":"","content_type":"${CONTENT_TYPES[p] || 'Post'}","best_time":"${BEST_TIMES[p] || 'Weekdays, 9 AM–6 PM'}"}`))
+          .join(',')}]}`)
+        .join(',')
 
-Deliver:
-1. campaign_tagline — one memorable line
-2. campaign_summary — 2 sentences
-3. brand_voice_guide — 2 sentences on how this brand sounds
-4. audience_insight — one sharp truth about ${form.audience}
-5. platforms — array: for each platform, ${form.variations} posts each with hook, caption, hashtags[], cta, content_type, best_time, visual_direction, engagement_tactic
-6. campaign_ideas — 3 concepts: title, big_idea, cultural_relevance, viral_mechanism, expected_impact
-7. kpis — 4 measurable KPIs
-8. budget_tips — 3 media spend tips
+      const prompt = `You are a senior social media Creative Director at a top agency. Your job is to write campaign content that feels crafted — not generated. Every word must earn its place.
 
-Return ONLY valid JSON. Start { end }.
+━━ CAMPAIGN BRIEF ━━
+Brand: ${form.brand}
+Product / Service: ${form.product}
+Campaign Type: ${form.campaignType}
+Campaign Goal: ${form.goal}
+Target Audience: ${form.audience}
+Tone: ${form.tone} — ${toneGuide}
+${keywordsLine}
+
+━━ STRATEGY ━━
+${strategyGuide}
+
+━━ PLATFORMS & RULES ━━
+${platformBlocks}
+
+━━ OUTPUT REQUIREMENTS ━━
+For EACH of the ${selectedPlatforms.length} platform(s) listed, write exactly ${varCount} post variation(s).
+
+Each variation MUST:
+- hook: 5–10 words max. A scroll-stopper. NOT a sentence from the caption. NOT a generic opener like "Discover", "Introducing", or "Unlock your potential". Make it surprising, specific, or tension-creating.
+- caption: 2–4 sentences. Expands the hook with a specific benefit or insight tied to ${form.brand}'s ${form.product}. Speaks directly to ${form.audience}. Ends naturally into the CTA. NEVER repeats the hook verbatim.
+- hashtags: 4–6 tags. Short, real, discoverable. NO compound tags longer than 3 words (e.g. avoid #UrbanWellnessForEveryoneWhoCaresAboutHealth). Mix: 1 brand tag, 2–3 niche tags, 1–2 broad trending tags.
+- cta: One specific action. Not "Learn more" or "Click the link". Make it feel like an invitation, not a command.
+- content_type: The native format for that platform.
+- best_time: The optimal posting window for that platform.
+
+Variation DIVERSITY rules — all ${varCount} variations for each platform must use DIFFERENT angles:
+  Variation 1 — Lead with the PROBLEM or pain point the audience has
+  Variation 2 — Lead with the OUTCOME or transformation after using ${form.product}
+  Variation 3 — Lead with SOCIAL PROOF, a bold claim, or a counterintuitive take
+  (If ${varCount} > 3, continue rotating: curiosity gap, behind-the-scenes, challenge/question)
+
+ALSO deliver:
+- campaign_tagline: One memorable line for the whole campaign (not a slogan, a truth)
+- campaign_summary: 2 sentences explaining the campaign angle and why it works for ${form.audience}
+- brand_voice_guide: 2 sentences. What ${form.brand} sounds like and what it never says.
+- audience_insight: One sharp, specific truth about ${form.audience} that shapes every post
+- campaign_ideas: 3 creative campaign concepts, each with: title, big_idea, cultural_relevance, viral_mechanism, expected_impact
+- kpis: 4 specific, measurable KPIs for this campaign
+- budget_tips: 3 practical media spend tips
+
+FORBIDDEN words and phrases (never use these):
+"Unlock", "Empower", "Revolutionize", "Game-changer", "Introducing", "Excited to announce",
+"Take your X to the next level", "In today's world", "Journey", "Elevate", "Solution",
+"We believe", "Are you ready to", "Say goodbye to", "Hello to"
+
+Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { and end with }.
 {
-  "campaign_tagline":"","campaign_summary":"","brand_voice_guide":"","audience_insight":"",
-  "platforms":[{"platform_name":"${selectedPlatforms[0]}","posts":[{"hook":"","caption":"","hashtags":[],"cta":"","content_type":"","best_time":"","visual_direction":"","engagement_tactic":""}]}],
+  "campaign_tagline":"",
+  "campaign_summary":"",
+  "brand_voice_guide":"",
+  "audience_insight":"",
+  "platforms":[${platformSchema}],
   "campaign_ideas":[{"title":"","big_idea":"","cultural_relevance":"","viral_mechanism":"","expected_impact":""}],
-  "kpis":[],"budget_tips":[]
+  "kpis":[],
+  "budget_tips":[]
 }`
 
       let parsed = null
@@ -170,11 +264,13 @@ Return ONLY valid JSON. Start { end }.
             brand_name:         form.brand,
             product_or_service: form.product,
             campaign_goal:      form.goal,
+            campaign_type:      form.campaignType,
             target_audience:    form.audience,
             key_message:        form.keywords || form.goal,
-            call_to_action:     `Learn more about ${form.product}`,
+            call_to_action:     `Explore ${form.product} by ${form.brand}`,
             tone:               form.tone,
-            platform:           selectedPlatforms[0] || 'Instagram',
+            platforms:          selectedPlatforms,
+            variations:         form.variations || 3,
           }),
         })
         if (res.ok) {
@@ -187,54 +283,62 @@ Return ONLY valid JSON. Start { end }.
             backendData.post_variations.some(v => PLACEHOLDER_RE.test(String(v).trim()))
           // Convert to the full campaign shape the UI expects
           if (backendData && backendData.post_variations && !isPlaceholder) {
-            const platformsMap = {}
-            // Extract a short hook (≤12 words) from the first sentence/line of a post.
-            // The hook is the scroll-stopping opener; the caption is the full post body.
-            function extractHook(post) {
-              if (!post) return ''
-              // Try first line if it's short enough (≤ 80 chars)
-              const firstLine = post.split('\n')[0].trim()
-              if (firstLine.length <= 80) return firstLine
-              // Otherwise trim to first sentence
-              const firstSentence = post.split(/(?<=[.!?])\s/)[0].trim()
-              if (firstSentence.length <= 80) return firstSentence
-              // Last resort: first 10 words
-              return post.split(' ').slice(0, 10).join(' ') + '…'
-            }
-            for (const p of selectedPlatforms) {
-              platformsMap[p] = {
-                posts: backendData.post_variations.map((post, i) => {
-                  // Prefer the dedicated short hook from backend; fall back to extractHook
-                  const hook = backendData.hook_variations?.[i]
-                    ? String(backendData.hook_variations[i]).trim()
-                    : extractHook(post)
-                  // Caption = full post body with hook stripped from the top to avoid duplication
-                  const hookPrefix = hook.replace(/…$/, '')
-                  const caption = post.trimStart().startsWith(hookPrefix)
-                    ? post.trimStart().slice(hookPrefix.length).replace(/^[\.!?\n]+/, '').trimStart()
-                    : post
-                  return {
-                    hook,
-                    caption:           caption || post,
-                    hashtags:          backendData.hashtags || [],
-                    cta:               backendData.cta || '',
-                    content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
-                    best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
-                    visual_direction:  '',
-                    engagement_tactic: '',
-                  }
-                }),
+            // If the backend returned a full platforms array (new format), use it directly
+            if (Array.isArray(backendData.platforms) && backendData.platforms.length > 0) {
+              parsed = {
+                campaign_tagline:  backendData.campaign_tagline  || `${form.brand} — ${form.goal}`,
+                campaign_summary:  backendData.campaign_summary  || '',
+                brand_voice_guide: backendData.brand_voice_guide || '',
+                audience_insight:  backendData.audience_insight  || '',
+                platforms:         backendData.platforms,
+                campaign_ideas:    backendData.campaign_ideas    || [],
+                kpis:              backendData.kpis              || [],
+                budget_tips:       backendData.budget_tips       || [],
               }
-            }
-            parsed = {
-              campaign_tagline:  backendData.caption_variations?.[0] || `${form.brand} — ${form.goal}`,
-              campaign_summary:  backendData.caption_variations?.[1] || '',
-              brand_voice_guide: backendData.caption_variations?.[2] || '',
-              audience_insight:  '',
-              platforms:         platformsMap,
-              campaign_ideas:    [],
-              kpis:              [],
-              budget_tips:       [],
+            } else {
+              // Legacy flat format: reconstruct platforms map from post_variations
+              const platformsMap = {}
+              const extractHook = (post) => {
+                if (!post) return ''
+                const firstLine = post.split('\n')[0].trim()
+                if (firstLine.length <= 80) return firstLine
+                const firstSentence = post.split(/(?<=[.!?])\s/)[0].trim()
+                if (firstSentence.length <= 80) return firstSentence
+                return post.split(' ').slice(0, 10).join(' ') + '…'
+              }
+              for (const p of selectedPlatforms) {
+                platformsMap[p] = {
+                  posts: backendData.post_variations.map((post, i) => {
+                    const hook = backendData.hook_variations?.[i]
+                      ? String(backendData.hook_variations[i]).trim()
+                      : extractHook(post)
+                    const hookPrefix = hook.replace(/…$/, '')
+                    const caption = post.trimStart().startsWith(hookPrefix)
+                      ? post.trimStart().slice(hookPrefix.length).replace(/^[\.!?\n]+/, '').trimStart()
+                      : post
+                    return {
+                      hook,
+                      caption:           caption || post,
+                      hashtags:          backendData.hashtags || [],
+                      cta:               backendData.cta || '',
+                      content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
+                      best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
+                      visual_direction:  '',
+                      engagement_tactic: '',
+                    }
+                  }),
+                }
+              }
+              parsed = {
+                campaign_tagline:  backendData.caption_variations?.[0] || `${form.brand} — ${form.goal}`,
+                campaign_summary:  backendData.caption_variations?.[1] || '',
+                brand_voice_guide: backendData.caption_variations?.[2] || '',
+                audience_insight:  '',
+                platforms:         platformsMap,
+                campaign_ideas:    [],
+                kpis:              [],
+                budget_tips:       [],
+              }
             }
           }
         }

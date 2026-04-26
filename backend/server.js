@@ -372,9 +372,16 @@ Return ONLY valid JSON. Start { end }.
 app.post("/generate-post", async (req, res) => {
   try {
     const {
-      brand_name, campaign_goal, product_or_service,
-      target_audience, key_message, call_to_action,
-      tone = "professional", platform = "Instagram",
+      brand_name,
+      product_or_service,
+      campaign_goal,
+      campaign_type      = "Product Launch",
+      target_audience,
+      key_message,
+      call_to_action,
+      tone               = "Professional",
+      platforms          = ["Instagram"],
+      variations         = 3,
     } = req.body;
 
     const missing = ["brand_name", "campaign_goal", "product_or_service", "target_audience", "key_message", "call_to_action"]
@@ -383,79 +390,167 @@ app.post("/generate-post", async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(", ")}` });
     }
 
-    const toneVoice = getToneVoice(tone);
-    const brandTag  = `#${brand_name.replace(/\s+/g, "")}`;
-    const prodTag   = `#${product_or_service.replace(/\s+/g, "")}`;
+    const platformList  = Array.isArray(platforms) ? platforms : [platforms];
+    const varCount      = Math.min(Math.max(Number(variations) || 3, 1), 5);
+    const toneVoice     = getToneVoice(tone);
+    const strategyGuide = getCampaignTypeGuidance(campaign_type);
+    const platformRules = getPlatformRules(platformList);
+    const brandTag      = `#${brand_name.replace(/\s+/g, "")}`;
+    const prodTag       = `#${product_or_service.replace(/\s+/g, "")}`;
+    const keywordsLine  = key_message && key_message !== campaign_goal
+      ? `Keywords / Themes: ${key_message}` : "";
 
-    // FIX: Prompt uses NO example placeholder values (no "v1","v2","v3","c1" etc.)
-    // Groq was previously echoing those back verbatim instead of generating real content.
-    // IMPORTANT: hook must be SHORT (≤10 words). caption is the full post body EXCLUDING the hook.
-    const prompt = `You are a social media Creative Director. Write real, publish-ready content. No placeholders. No template labels.
+    const CONTENT_TYPES = {
+      Instagram: "Reel / Carousel", Twitter: "Tweet", LinkedIn: "Article / Carousel",
+      Facebook: "Video Post", TikTok: "Short-form Video", YouTube: "Long-form / Shorts",
+    };
+    const BEST_TIMES = {
+      Instagram: "Tue\u2013Fri, 7\u20139 AM or 6\u20139 PM", Twitter: "Weekdays, 8\u201310 AM or 6\u20138 PM",
+      LinkedIn: "Tue\u2013Thu, 7\u20139 AM or 12\u20131 PM", Facebook: "Wed\u2013Fri, 1\u20133 PM",
+      TikTok: "Daily, 6\u201310 PM", YouTube: "Fri\u2013Sun, 2\u20134 PM",
+    };
 
+    const platformSchema = platformList
+      .map(p => `{"platform_name":"${p}","posts":[${Array.from({ length: varCount }, () =>
+        `{"hook":"","caption":"","hashtags":[],"cta":"","content_type":"${CONTENT_TYPES[p] || "Post"}","best_time":"${BEST_TIMES[p] || "Weekdays, 9 AM\u20136 PM"}"`
+        + "}")
+        .join(",")}]}`)
+      .join(",");
+
+    const prompt = `You are a senior social media Creative Director at a top agency. Write campaign content that feels crafted \u2014 not generated. Every word earns its place.
+
+\u2501\u2501 CAMPAIGN BRIEF \u2501\u2501
 Brand: ${brand_name}
-Product/Service: ${product_or_service}
+Product / Service: ${product_or_service}
+Campaign Type: ${campaign_type}
 Campaign Goal: ${campaign_goal}
 Target Audience: ${target_audience}
-Tone: ${tone} — ${toneVoice}
-Key Message: ${key_message}
-Call To Action: ${call_to_action}
-Platform: ${platform}
+Tone: ${tone} \u2014 ${toneVoice}
+${keywordsLine}
 
-Write exactly 3 full, publish-ready post variations for ${platform}. Each post must:
-- Have a SHORT hook (5-10 words max) that grabs attention in the feed — this is a headline, NOT a paragraph
-- Have a separate full caption (2-4 sentences) that expands on the hook, references ${product_or_service} specifically, and ends with: ${call_to_action}
-- Sound like a real person, not a marketing bot
-- Use ${platform}-native language and energy
+\u2501\u2501 STRATEGY \u2501\u2501
+${strategyGuide}
 
-Also write:
-- 3 short captions (1-2 lines each, punchy, platform-native)
-- 10 relevant hashtags starting with # (mix of brand, niche, trending)
-- 1 strong CTA line
+\u2501\u2501 PLATFORMS & RULES \u2501\u2501
+${platformRules}
 
-CRITICAL: post_variations must each be the FULL post text (hook + body combined).
-hook_variations must each be ONLY the short hook line (5-10 words, no period at end unless it's a question).
+\u2501\u2501 OUTPUT REQUIREMENTS \u2501\u2501
+For EACH of the ${platformList.length} platform(s), write exactly ${varCount} post variation(s).
 
-Return ONLY a valid JSON object. No explanation before or after.
+Each variation MUST have:
+- hook: 5\u201310 words max. A scroll-stopper. NOT generic (never "Discover", "Introducing", "Unlock your potential", "Say goodbye to"). Make it surprising, specific, or tension-creating.
+- caption: 2\u20134 sentences. Expands the hook with a specific benefit tied to ${brand_name}\u2019s ${product_or_service}. Speaks to ${target_audience}. Ends naturally into the CTA. NEVER repeats the hook verbatim.
+- hashtags: 4\u20136 tags. Short, real, discoverable. NO compound tags over 3 words. Mix: 1 brand tag, 2\u20133 niche tags, 1\u20132 broad trending tags.
+- cta: One specific action \u2014 not \u201cLearn more\u201d or \u201cClick the link\u201d. Make it feel like an invitation.
+- content_type: Native format for that platform.
+- best_time: Optimal posting window.
+
+Variation DIVERSITY \u2014 each variation must use a DIFFERENT angle:
+  Variation 1 \u2014 Lead with the PROBLEM or pain point
+  Variation 2 \u2014 Lead with the OUTCOME or transformation
+  Variation 3 \u2014 Lead with SOCIAL PROOF, bold claim, or counterintuitive take
+  (Beyond 3: rotate curiosity gap, behind-the-scenes, challenge/question)
+
+ALSO deliver:
+- post_variations: array of ${varCount} full post strings (hook + newline + caption combined) for the first platform \u2014 for backward compatibility
+- hook_variations: array of ${varCount} short hook strings only (5\u201310 words each) for the first platform
+- caption_variations: array of ${varCount} short 1\u20132 line captions for the first platform
+- hashtags: 8\u201310 hashtags for the campaign overall
+- cta: one strong CTA string
+- platforms: full structured array for ALL platforms
+- campaign_tagline: one memorable campaign truth line
+- campaign_summary: 2 sentences on the campaign angle
+- brand_voice_guide: 2 sentences on what ${brand_name} sounds like and never says
+- audience_insight: one sharp specific truth about ${target_audience}
+- campaign_ideas: 3 creative concepts each with title, big_idea, cultural_relevance, viral_mechanism, expected_impact
+- kpis: 4 specific measurable KPIs
+- budget_tips: 3 practical media spend tips
+
+FORBIDDEN \u2014 never use these words or phrases:
+\u201cUnlock\u201d, \u201cEmpower\u201d, \u201cRevolutionize\u201d, \u201cGame-changer\u201d, \u201cIntroducing\u201d, \u201cExcited to announce\u201d,
+\u201cTake your X to the next level\u201d, \u201cIn today\u2019s world\u201d, \u201cJourney\u201d, \u201cElevate\u201d, \u201cSolution\u201d,
+\u201cWe believe\u201d, \u201cAre you ready to\u201d, \u201cSay goodbye to\u201d, \u201cHello to\u201d
+
+Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { end with }.
 {
-  "post_variations": ["<full post 1 — hook line then newline then body>", "<full post 2>", "<full post 3>"],
-  "hook_variations": ["<short hook 1 — 5-10 words>", "<short hook 2>", "<short hook 3>"],
-  "caption_variations": ["<caption 1>", "<caption 2>", "<caption 3>"],
-  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6", "#tag7", "#tag8", "#tag9", "#tag10"],
-  "cta": "<strong CTA line>"
+  "post_variations":[],
+  "hook_variations":[],
+  "caption_variations":[],
+  "hashtags":[],
+  "cta":"",
+  "campaign_tagline":"",
+  "campaign_summary":"",
+  "brand_voice_guide":"",
+  "audience_insight":"",
+  "platforms":[${platformSchema}],
+  "campaign_ideas":[{"title":"","big_idea":"","cultural_relevance":"","viral_mechanism":"","expected_impact":""}],
+  "kpis":[],
+  "budget_tips":[]
 }`;
 
-    let parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 1200 });
+    let parsed = await generateWithFallback(prompt, { temperature: TEMPERATURE_PRESETS.creative, maxTokens: 2400 });
 
-    // FIX: Detect if Groq echoed placeholder values and treat it as a failed response
     if (parsed && isPlaceholderResponse(parsed)) {
-      console.warn("[/generate-post] Groq returned placeholder values — falling back.");
+      console.warn("[/generate-post] Groq returned placeholder values \u2014 falling back.");
       parsed = null;
     }
 
     if (!parsed) {
       console.warn("[/generate-post] Groq returned null/placeholder. Serving domain fallback.");
+      const fallbackVariations = [
+        `${target_audience} don't need another ${product_or_service}.\n\nThey need one that actually works for how they live. ${brand_name} built ${product_or_service} around that truth.\n\n${call_to_action}.`,
+        `Here's what happens after ${target_audience} try ${brand_name}'s ${product_or_service} for 7 days.\n\n${campaign_goal}. No complicated setup. No learning curve.\n\n${call_to_action}.`,
+        `The ${product_or_service} category is crowded. Most of it is noise.\n\n${brand_name} is the one ${target_audience} keep recommending to each other. Here's why.\n\n${call_to_action}.`,
+      ].slice(0, varCount);
       return res.json({
-        post_variations: [
-          `Nobody talks about this, but ${key_message}. 👀\n\n${brand_name}'s ${product_or_service} was built for exactly that.\n\n${call_to_action} — link in bio.`,
-          `POV: You just discovered ${product_or_service} and realised you've been doing it the hard way.\n\n${key_message}.\n\n${call_to_action} 👇`,
-          `Real talk for ${target_audience}:\n\n${key_message}.\n\n${brand_name} built ${product_or_service} to change that.\n\n${call_to_action}.`,
-        ],
+        post_variations:    fallbackVariations,
+        hook_variations:    [
+          `${target_audience} deserve better than this`,
+          `7 days with ${brand_name} changes things`,
+          `Why ${target_audience} keep choosing ${brand_name}`,
+        ].slice(0, varCount),
         caption_variations: [
-          `${key_message}. ${call_to_action} 👇`,
+          `${campaign_goal}. ${call_to_action}.`,
           `Built for ${target_audience}. ${product_or_service} by ${brand_name}.`,
-          `Stop scrolling. ${key_message}. ${call_to_action}.`,
-        ],
-        hashtags: [brandTag, prodTag, "#SocialMedia", "#Marketing", "#TrendingNow", "#ContentMarketing", "#DigitalMarketing", `#${target_audience.replace(/\s+/g, "")}`, "#RelatableContent", "#MustSee"].slice(0, 10),
+          `The ${product_or_service} ${target_audience} actually recommend. ${call_to_action}.`,
+        ].slice(0, varCount),
+        hashtags: [brandTag, prodTag, `#${target_audience.replace(/\s+/g, "")}`, "#ContentMarketing", "#DigitalMarketing", "#SocialMedia", "#Marketing", "#BrandStory", "#RealContent", "#MustSee"].slice(0, 10),
         cta: call_to_action,
+        campaign_tagline: `${brand_name} \u2014 built for ${target_audience}, not for the shelf`,
+        campaign_summary: `This campaign speaks directly to ${target_audience}'s real experience with ${product_or_service}. Every post leads with honesty and earns the CTA.`,
+        brand_voice_guide: `${brand_name} sounds like a smart friend who knows their stuff \u2014 direct, specific, never preachy. It never says \u201cElevate\u201d or \u201cEmpower\u201d.`,
+        audience_insight: `${target_audience} have seen every claim in this category. They trust brands that skip the marketing voice and talk to them like adults.`,
+        platforms: platformList.map(p => ({
+          platform_name: p,
+          posts: fallbackVariations.map((post, i) => ({
+            hook:         ["${target_audience} deserve better than this", "7 days with ${brand_name} changes things", "Why ${target_audience} keep choosing ${brand_name}"][i] || post.split("\n")[0],
+            caption:      post,
+            hashtags:     [brandTag, prodTag, `#${p}Marketing`, "#RealContent", "#MustSee"],
+            cta:          call_to_action,
+            content_type: CONTENT_TYPES[p] || "Post",
+            best_time:    BEST_TIMES[p] || "Weekdays, 9 AM\u20136 PM",
+          })),
+        })),
+        campaign_ideas: [],
+        kpis: [],
+        budget_tips: [],
       });
     }
 
     return res.json({
-      post_variations:    (parsed.post_variations    || []).slice(0, 3).map(String),
-      hook_variations:    (parsed.hook_variations    || []).slice(0, 3).map(String),
-      caption_variations: (parsed.caption_variations || []).slice(0, 3).map(String),
+      post_variations:    (parsed.post_variations    || []).slice(0, varCount).map(String),
+      hook_variations:    (parsed.hook_variations    || []).slice(0, varCount).map(String),
+      caption_variations: (parsed.caption_variations || []).slice(0, varCount).map(String),
       hashtags:           (parsed.hashtags           || []).slice(0, 10).map(String),
       cta:                String(parsed.cta          || call_to_action),
+      campaign_tagline:   String(parsed.campaign_tagline  || ""),
+      campaign_summary:   String(parsed.campaign_summary  || ""),
+      brand_voice_guide:  String(parsed.brand_voice_guide || ""),
+      audience_insight:   String(parsed.audience_insight  || ""),
+      platforms:          parsed.platforms || [],
+      campaign_ideas:     parsed.campaign_ideas || [],
+      kpis:               parsed.kpis        || [],
+      budget_tips:        parsed.budget_tips  || [],
     });
   } catch (err) {
     console.error("[/generate-post] Error:", err);
