@@ -21,12 +21,12 @@ const PLATFORM_STYLE = {
 }
 
 const CARD_PALETTES = [
-  { bg: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', initial: '#6366F1', delete: '#4338CA' },
-  { bg: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)', initial: '#16A34A', delete: '#15803D' },
-  { bg: 'linear-gradient(135deg, #FDF4FF 0%, #FAE8FF 100%)', initial: '#A855F7', delete: '#7E22CE' },
-  { bg: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)', initial: '#F97316', delete: '#C2410C' },
-  { bg: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)', initial: '#FB7185', delete: '#BE123C' },
-  { bg: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', initial: '#38BDF8', delete: '#0369A1' },
+  { bg: 'linear-gradient(135deg, #38BDF8 0%, #3B6BF5 60%, #6366F1 100%)', initial: 'rgba(255,255,255,0.4)' },
+  { bg: 'linear-gradient(135deg, #34D399 0%, #0EA5B0 60%, #0EA5E9 100%)', initial: 'rgba(255,255,255,0.4)' },
+  { bg: 'linear-gradient(135deg, #F472B6 0%, #C084FC 60%, #818CF8 100%)', initial: 'rgba(255,255,255,0.4)' },
+  { bg: 'linear-gradient(135deg, #FB923C 0%, #F59E0B 60%, #EAB308 100%)', initial: 'rgba(255,255,255,0.4)' },
+  { bg: 'linear-gradient(135deg, #F87171 0%, #EF4444 60%, #DC2626 100%)', initial: 'rgba(255,255,255,0.4)' },
+  { bg: 'linear-gradient(135deg, #A3E635 0%, #22C55E 60%, #059669 100%)', initial: 'rgba(255,255,255,0.4)' },
 ]
 
 function formatDate(iso) {
@@ -234,7 +234,6 @@ function CampaignCard({ campaign, palette, onClick, onDelete }) {
             onClick={onDelete}
             title="Delete campaign"
             aria-label="Delete campaign"
-            style={{ color: pal.delete }}
           >
             <TrashIcon />
           </button>
