@@ -188,18 +188,42 @@ Return ONLY valid JSON. Start { end }.
           // Convert to the full campaign shape the UI expects
           if (backendData && backendData.post_variations && !isPlaceholder) {
             const platformsMap = {}
+            // Extract a short hook (≤12 words) from the first sentence/line of a post.
+            // The hook is the scroll-stopping opener; the caption is the full post body.
+            function extractHook(post) {
+              if (!post) return ''
+              // Try first line if it's short enough (≤ 80 chars)
+              const firstLine = post.split('\n')[0].trim()
+              if (firstLine.length <= 80) return firstLine
+              // Otherwise trim to first sentence
+              const firstSentence = post.split(/(?<=[.!?])\s/)[0].trim()
+              if (firstSentence.length <= 80) return firstSentence
+              // Last resort: first 10 words
+              return post.split(' ').slice(0, 10).join(' ') + '…'
+            }
             for (const p of selectedPlatforms) {
               platformsMap[p] = {
-                posts: backendData.post_variations.map((post, i) => ({
-                  hook:              post.split('\n')[0] || post,
-                  caption:           post,
-                  hashtags:          backendData.hashtags || [],
-                  cta:               backendData.cta || '',
-                  content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
-                  best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
-                  visual_direction:  '',
-                  engagement_tactic: '',
-                })),
+                posts: backendData.post_variations.map((post, i) => {
+                  // Prefer the dedicated short hook from backend; fall back to extractHook
+                  const hook = backendData.hook_variations?.[i]
+                    ? String(backendData.hook_variations[i]).trim()
+                    : extractHook(post)
+                  // Caption = full post body with hook stripped from the top to avoid duplication
+                  const hookPrefix = hook.replace(/…$/, '')
+                  const caption = post.trimStart().startsWith(hookPrefix)
+                    ? post.trimStart().slice(hookPrefix.length).replace(/^[\.!?\n]+/, '').trimStart()
+                    : post
+                  return {
+                    hook,
+                    caption:           caption || post,
+                    hashtags:          backendData.hashtags || [],
+                    cta:               backendData.cta || '',
+                    content_type:      p === 'Instagram' ? 'Reel / Carousel' : p === 'Twitter' ? 'Tweet' : p === 'LinkedIn' ? 'Article / Carousel' : 'Post',
+                    best_time:         'Tuesday–Friday, 7–9 AM or 6–9 PM',
+                    visual_direction:  '',
+                    engagement_tactic: '',
+                  }
+                }),
               }
             }
             parsed = {

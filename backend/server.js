@@ -389,6 +389,7 @@ app.post("/generate-post", async (req, res) => {
 
     // FIX: Prompt uses NO example placeholder values (no "v1","v2","v3","c1" etc.)
     // Groq was previously echoing those back verbatim instead of generating real content.
+    // IMPORTANT: hook must be SHORT (≤10 words). caption is the full post body EXCLUDING the hook.
     const prompt = `You are a social media Creative Director. Write real, publish-ready content. No placeholders. No template labels.
 
 Brand: ${brand_name}
@@ -401,20 +402,23 @@ Call To Action: ${call_to_action}
 Platform: ${platform}
 
 Write exactly 3 full, publish-ready post variations for ${platform}. Each post must:
-- Open with a scroll-stopping hook specific to ${brand_name}
-- Use ${platform}-native language, length, and energy
-- Reference ${product_or_service} and ${key_message} specifically — no generic filler
-- End with: ${call_to_action}
+- Have a SHORT hook (5-10 words max) that grabs attention in the feed — this is a headline, NOT a paragraph
+- Have a separate full caption (2-4 sentences) that expands on the hook, references ${product_or_service} specifically, and ends with: ${call_to_action}
 - Sound like a real person, not a marketing bot
+- Use ${platform}-native language and energy
 
 Also write:
 - 3 short captions (1-2 lines each, punchy, platform-native)
 - 10 relevant hashtags starting with # (mix of brand, niche, trending)
 - 1 strong CTA line
 
+CRITICAL: post_variations must each be the FULL post text (hook + body combined).
+hook_variations must each be ONLY the short hook line (5-10 words, no period at end unless it's a question).
+
 Return ONLY a valid JSON object. No explanation before or after.
 {
-  "post_variations": ["<full post 1>", "<full post 2>", "<full post 3>"],
+  "post_variations": ["<full post 1 — hook line then newline then body>", "<full post 2>", "<full post 3>"],
+  "hook_variations": ["<short hook 1 — 5-10 words>", "<short hook 2>", "<short hook 3>"],
   "caption_variations": ["<caption 1>", "<caption 2>", "<caption 3>"],
   "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6", "#tag7", "#tag8", "#tag9", "#tag10"],
   "cta": "<strong CTA line>"
@@ -448,6 +452,7 @@ Return ONLY a valid JSON object. No explanation before or after.
 
     return res.json({
       post_variations:    (parsed.post_variations    || []).slice(0, 3).map(String),
+      hook_variations:    (parsed.hook_variations    || []).slice(0, 3).map(String),
       caption_variations: (parsed.caption_variations || []).slice(0, 3).map(String),
       hashtags:           (parsed.hashtags           || []).slice(0, 10).map(String),
       cta:                String(parsed.cta          || call_to_action),
