@@ -1,0 +1,193 @@
+{
+  "brief": {
+    "brand_name": "Soft Corners",
+    "product_service": "Podcast",
+    "campaign_goal": "Drive plays",
+    "target_audience": "Gen z",
+    "tone": "Inspirational",
+    "platforms": [
+      "Instagram"
+    ]
+  },
+  "brands": [
+    {
+      "name": "Nike",
+      "industry": "E-Commerce",
+      "tone": "Professional",
+      "platforms": [
+        "Instagram",
+        "Twitter / X"
+      ],
+      "notes": "New wedding shoes launch",
+      "color": "#16A34A"
+    }
+  ],
+  "content_tasks": [
+    {
+      "id": 0,
+      "title": "Insta Reel - Product Launch",
+      "platform": "Instagram",
+      "task_type": "Reel",
+      "date": "2026-05-05",
+      "time": "16:57",
+      "status": "Planned",
+      "description": ""
+    },
+    {
+      "id": 1,
+      "title": "Photoshoot - Instagram",
+      "platform": "Instagram",
+      "task_type": "Photoshoot",
+      "date": "2026-05-14",
+      "time": "07:30",
+      "status": "In Progress",
+      "description": ""
+    }
+  ],
+  "fav_ids": [],
+  "archived_ids": [],
+  "saved_campaigns": [
+    {
+      "id": 0,
+      "campaign_name": "padma unplugged",
+      "tone": "Inspirational",
+      "platforms": [
+        "Instagram",
+        "Twitter"
+      ],
+      "status": "Active",
+      "output_count": 6,
+      "ago": "Just now"
+    }
+  ],
+  "ws_outputs": {
+    "0": [
+      {
+        "type": "ai",
+        "data": {
+          "campaign_tagline": "Unlock Your Potential",
+          "campaign_summary": "Introducing Padma Unplugged, a YouTube channel dedicated to inspirational content focused on performance. Our goal is to drive 500 subscribers and create a community that uplifts and motivates millennials to reach their full potential.",
+          "brand_voice_guide": "Inspirational, motivational, and uplifting tone that resonates with millennials and encourages them to take action.",
+          "audience_insight": "Millennials aged 22-35 who are interested in personal development, self-improvement, and performance enhancement. They are active on social media, enthusiastic about new ideas, and eager to learn from others.",
+          "platforms": {
+            "Instagram": {
+              "posts": [
+                {
+                  "hook": "What's holding you back from achieving greatness?",
+                  "caption": "Join the Padma Unplugged community and unlock your full potential with our inspiring content and performance-driven advice.",
+                  "hashtags": [
+                    "#PadmaUnplugged",
+                    "#PerformanceMatters",
+                    "#MotivationMonday"
+                  ],
+                  "cta": "Subscribe to our YouTube channel now!",
+                  "content_type": "Reels",
+                  "best_time": "Monday morning",
+                  "visual_direction": "High-energy visuals with inspiring quotes and footage of people achieving their goals.",
+                  "engagement_tactic": "Ask followers to share their own stories of overcoming obstacles and achieving success."
+                },
+                {
+                  "hook": "Ready to take your life to the next level?",
+                  "caption": "Padma Unplugged is your go-to destination for inspirational content, performance tips, and motivation to help you succeed.",
+                  "hashtags": [
+                    "#PersonalDevelopment",
+                    "#SelfImprovement",
+                    "#PadmaUnplugged"
+                  ],
+                  "cta": "Subscribe now and start achieving your goals!",
+                  "content_type": "Reels",
+                  "best_time": "Wednesday evening",
+                  "visual_direction": "Visually appealing graphics and animations that highlight key takeaways from our YouTube videos.",
+                  "engagement_tactic": "Host a Q&A session with our experts and encourage followers to ask questions."
+                },
+                {
+                  "hook": "What does performance mean to you?",
+                  "caption": "At Padma Unplugged, we believe that performance is not just about achieving success, but also about the journey, the struggles, and the lessons learned along the way.",
+                  "hashtags": [
+                    "#Performance",
+                    "#Inspiration",
+                    "#Motivation"
+                  ],
+                  "cta": "Share your story and join the conversation!",
+                  "content_type": "Reels",
+                  "best_time": "Friday afternoon",
+                  "visual_direction": "User-generated content and stories of people who have overcome challenges and achieved their goals.",
+                  "engagement_tactic": "Collaborate with influencers and thought leaders in the personal development space."
+                }
+              ]
+            },
+            "Twitter": {
+              "posts": [
+                {
+                  "hook": "Performance is not just about winning, it's about the journey!",
+                  "caption": "Join the conversation and subscribe to our YouTube channel for inspirational content and performance-driven advice.",
+                  "hashtags": [
+                    "#PerformanceMatters"
+                  ],
+                  "cta": "Subscribe now!",
+                  "content_type": "Tweet",
+                  "best_time": "Monday morning",
+                  "visual_direction": "Tweet with a visually appealing image or graphic.",
+                  "engagement_tactic": "Ask followers to share their thoughts on what performance means to them."
+                },
+                {
+                  "hook": "Ready to unlock your full potential?",
+                  "caption": "Padma Unplugged is your go-to destination for inspirational content and performance tips.",
+                  "hashtags": [
+                    "#PersonalDevelopment"
+                  ],
+                  "cta": "Subscribe now!",
+                  "content_type": "Tweet",
+                  "best_time": "Wednesday evening",
+                  "visual_direction": "Tweet with a link to our latest YouTube video.",
+                  "engagement_tactic": "Host a Twitter chat with our experts and encourage followers to ask questions."
+                },
+                {
+                  "hook": "What's holding you back from achieving greatness?",
+                  "caption": "Join the Padma Unplugged community and unlock your full potential with our inspiring content and performance-driven advice.",
+                  "hashtags": [
+                    "#Motivation"
+                  ],
+                  "cta": "Subscribe to our YouTube channel now!",
+                  "content_type": "Tweet",
+                  "best_time": "Friday afternoon",
+                  "visual_direction": "Tweet with a quote or inspiring image.",
+                  "engagement_tactic": "Collaborate with influencers and thought leaders in the personal development space."
+                }
+              ]
+            }
+          },
+          "campaign_ideas": [
+            {
+              "title": "Unlock Your Potential",
+              "big_idea": "Create a series of inspirational videos and social media content that showcases people overcoming obstacles and achieving their goals.",
+              "viral_mechanism": "Encourage followers to share their own stories of success and tag their friends who need motivation.",
+              "expected_impact": "Drive 500 subscribers to our YouTube channel and create a community of like-minded individuals who are passionate about personal development and performance enhancement."
+            }
+          ],
+          "kpis": [
+            "Subscriber growth",
+            "Engagement rate",
+            "Video views",
+            "Website traffic"
+          ],
+          "budget_tips": [
+            "Allocate budget to content creation and social media advertising.",
+            "Collaborate with influencers and thought leaders in the personal development space.",
+            "Utilize user-generated content and encourage followers to share their stories."
+          ],
+          "_brand": "Padma Unplugged",
+          "_product": "Youtube channel",
+          "_tone": "Inspirational",
+          "_platforms": [
+            "Instagram",
+            "Twitter"
+          ],
+          "_variations": 3
+        },
+        "saved_at": "03 May 2026, 08:15 PM"
+      }
+    ]
+  },
+  "my_shares": []
+}
