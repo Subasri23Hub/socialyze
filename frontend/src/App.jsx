@@ -20,18 +20,24 @@ const CreatorStudioPage    = lazy(() => import('./pages/CreatorStudioPage.jsx'))
 const ComplianceGuardPage  = lazy(() => import('./pages/ComplianceGuardPage.jsx'))
 
 export default function App() {
-  const [session,     setSession]     = useState(undefined) // undefined = not yet resolved
+  const [session,     setSession]     = useState(undefined)
   const [activeNav,   setActiveNav]   = useState('campaigns')
   const [workspaceId, setWorkspaceId] = useState(null)
 
   useEffect(() => {
-    // getSession() always resolves — even when logged out (returns null).
-    // This is the reliable source of truth on every page load / server restart.
+    // If Supabase redirected back with an OAuth error in the URL
+    // (e.g. bad_oauth_state), strip it and show the login page cleanly.
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('error')) {
+      window.history.replaceState({}, '', '/')
+      setSession(null)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s ?? null)
     })
 
-    // onAuthStateChange handles live sign-in / sign-out / token refresh events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s ?? null)
     })
