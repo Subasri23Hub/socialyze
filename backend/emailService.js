@@ -210,7 +210,7 @@ Sign in with this email address to access the workspace.
  * @returns {Promise<{ success: boolean, error: string|null }>}
  */
 async function sendShareInvite({ toEmail, ownerEmail, campaignName, permission = 'view', appUrl }) {
-  const url = appUrl || process.env.APP_URL || 'http://localhost:5173';
+  const url = appUrl || process.env.APP_URL || 'https://socialyze-nu.vercel.app';
   try {
     const info = await transporter.sendMail({
       from:    fromAddress(),
@@ -267,5 +267,5 @@ module.exports = { sendShareInvite, verifyConnection };
  * # ── Sender name + frontend URL ──────────────────────────────────────
  * EMAIL_FROM_NAME=Socialyze
  * EMAIL_FROM_EMAIL=youremail@gmail.com
- * APP_URL=http://localhost:5173
+ * APP_URL=https://socialyze-nu.vercel.app
  */
