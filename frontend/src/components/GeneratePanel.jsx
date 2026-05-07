@@ -451,8 +451,18 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
       </div>
 
+      {/* Loading overlay — shown while generating, keeps panel visible */}
+      {loading && (
+        <div className={styles.loadingOverlay}>
+          <span className={styles.spinner} />
+          <span className={styles.loadingText}>
+            {retryStatus || 'Generating your campaign…'}
+          </span>
+        </div>
+      )}
+
       {/* Form */}
-      {!result && (
+      {!result && !loading && (
         <>
           <FillFromBriefButton onFill={handleFillFromBrief} onFillBrand={handleFillFromBrand} onNoBrief={onNoBrief} />
 
