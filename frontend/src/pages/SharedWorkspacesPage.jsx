@@ -2,26 +2,6 @@
  * SharedWorkspacesPage.jsx
  * ─────────────────────────────────────────────────────────────────────────────
  * AI Social Media Campaign Generator | Sourcesys Technologies
- *
- * Fully functional Shared Workspaces page.
- *
- * Features
- * ────────
- *  • "Shared With Me" tab  — campaigns other users have shared with the current
- *    user; click any card to open it in CampaignWorkspace (read-only view).
- *  • "My Shares" tab       — outgoing shares the current user has created;
- *    shows per-share invitee, permission badge, status pill, and a Revoke button.
- *  • "Share a Campaign" panel — pick any of the user's own campaigns, enter an
- *    email address, choose View / Edit permission, and click Send Invite.
- *
- * Data layer (all via campaignService.js → Supabase)
- * ───────────────────────────────────────────────────
- *  fetchIncomingShares()        → rows where invitee_email = current user email
- *  fetchOutgoingShares()        → rows where owner_id      = current user id
- *  fetchUserCampaigns()         → the user's own campaigns (for the share picker)
- *  shareCampaign(id, email, p)  → upsert a share row
- *  revokeShare(shareId)         → delete a share row
- *  updateSharePermission(id, p) → patch permission on a share row
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -80,21 +60,18 @@ const STATUS_STYLES = {
 // Main component
 // ─────────────────────────────────────────────────────────────
 export default function SharedWorkspacesPage({ onOpenWorkspace }) {
-  const [tab, setTab]             = useState('incoming')   // 'incoming' | 'outgoing' | 'share'
+  const [tab, setTab] = useState('incoming')
 
-  // Data
   const [incoming,    setIncoming]    = useState([])
   const [outgoing,    setOutgoing]    = useState([])
   const [myCampaigns, setMyCampaigns] = useState([])
 
-  // Loading / error
   const [loadingIn,  setLoadingIn]  = useState(true)
   const [loadingOut, setLoadingOut] = useState(true)
   const [loadingCmp, setLoadingCmp] = useState(true)
   const [errorIn,    setErrorIn]    = useState('')
   const [errorOut,   setErrorOut]   = useState('')
 
-  // Share form
   const [selectedCampaign, setSelectedCampaign] = useState('')
   const [inviteeEmail,     setInviteeEmail]     = useState('')
   const [permission,       setPermission]       = useState('view')
@@ -102,9 +79,8 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
   const [shareSuccess,     setShareSuccess]     = useState('')
   const [shareError,       setShareError]       = useState('')
 
-  // Per-row revoke / permission-change state
-  const [revoking,      setRevoking]      = useState({})   // { shareId: true }
-  const [permChanging,  setPermChanging]  = useState({})   // { shareId: true }
+  const [revoking,     setRevoking]     = useState({})
+  const [permChanging, setPermChanging] = useState({})
 
   // ── Load data ────────────────────────────────────────────────
   const loadIncoming = useCallback(async () => {
@@ -140,6 +116,7 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
   async function handleShare(e) {
     e.preventDefault()
     setShareError(''); setShareSuccess('')
+
     if (!selectedCampaign) { setShareError('Please select a campaign.'); return }
     if (!inviteeEmail.trim()) { setShareError('Please enter an email address.'); return }
     const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -147,43 +124,43 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
 
     setShareLoading(true)
 
-    // Step 1: Save the share record to the database
-    const { error } = await shareCampaign(selectedCampaign, inviteeEmail.trim(), permission)
-
-    if (error) {
+    // Step 1: Save the share record to Supabase
+    const { error: dbError } = await shareCampaign(selectedCampaign, inviteeEmail.trim(), permission)
+    if (dbError) {
       setShareLoading(false)
-      setShareError(error)
+      setShareError(dbError)
       return
     }
 
-    // Step 2: Send the invite email — await it and surface any failure
+    // Step 2: Send invite email — has a 20 s timeout built in, will always resolve
     const selectedCamp = myCampaigns.find(c => c.id === selectedCampaign)
     const campaignName = selectedCamp?.campaign_name || 'a campaign'
+    const capturedEmail = inviteeEmail.trim()
 
     const { success: emailSent, error: emailError } = await sendInviteEmail(
-      inviteeEmail.trim(),
+      capturedEmail,
       campaignName,
       permission
     )
 
+    // Always reset the form regardless of email outcome
     setShareLoading(false)
-
-    if (!emailSent) {
-      // Share was saved to DB successfully, but email delivery failed.
-      // Show a partial-success message so the user knows what happened.
-      setShareError(
-        `Share saved, but the invite email could not be sent: ${emailError || 'Unknown error'}. ` +
-        `The recipient can still access the campaign if they log in with ${inviteeEmail.trim()}.`
-      )
-    } else {
-      setShareSuccess(`Invite sent to ${inviteeEmail.trim()}!`)
-      setTimeout(() => setShareSuccess(''), 4000)
-    }
-
     setInviteeEmail('')
     setSelectedCampaign('')
     setPermission('view')
     loadOutgoing()
+
+    if (emailSent) {
+      setShareSuccess(`✓ Invite sent to ${capturedEmail}!`)
+      setTimeout(() => setShareSuccess(''), 5000)
+    } else {
+      // Share is saved in DB — recipient can still access it.
+      // Surface the error so the user knows what happened.
+      setShareError(
+        emailError ||
+        `Share saved, but the invite email failed. ${capturedEmail} can still log in to access it.`
+      )
+    }
   }
 
   // ── Revoke a share ───────────────────────────────────────────
@@ -202,7 +179,6 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
     loadOutgoing()
   }
 
-  // ── Tab counts ───────────────────────────────────────────────
   const inCount  = incoming.length
   const outCount = outgoing.length
 
@@ -293,7 +269,6 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
                           <button
                             className={styles.actionBtnEdit}
                             onClick={() => onOpenWorkspace && onOpenWorkspace(camp.id)}
-                            title="Open with edit access"
                           >
                             <EditIcon size={12} /> Edit Workspace
                           </button>
@@ -301,7 +276,6 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
                           <button
                             className={styles.actionBtnView}
                             onClick={() => onOpenWorkspace && onOpenWorkspace(camp.id)}
-                            title="Open in view-only mode"
                           >
                             <EyeIcon size={12} /> View Workspace
                           </button>
@@ -333,18 +307,15 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
           ) : (
             <div className={styles.shareList}>
               {outgoing.map(share => {
-                const camp   = share.campaigns
+                const camp = share.campaigns
                 if (!camp) return null
-                const ac     = avatarColor(share.invitee_email)
+                const ac       = avatarColor(share.invitee_email)
                 const campName = camp.campaign_name.charAt(0).toUpperCase() + camp.campaign_name.slice(1)
                 return (
                   <div key={share.id} className={styles.shareRow}>
-                    {/* Avatar */}
                     <div className={styles.shareAvatar} style={{ background: ac.bg, color: ac.color }}>
                       {initials(share.invitee_email)}
                     </div>
-
-                    {/* Info */}
                     <div className={styles.shareInfo}>
                       <div className={styles.shareEmail}>{share.invitee_email}</div>
                       <div className={styles.shareCampName}>
@@ -352,32 +323,23 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
                       </div>
                       <div className={styles.shareTime}>{formatRelative(share.created_at)}</div>
                     </div>
-
-                    {/* Controls */}
                     <div className={styles.shareControls}>
-                      {/* Status pill */}
                       <span className={`${styles.statusPill} ${share.status === 'accepted' ? styles.statusAccepted : styles.statusPending}`}>
                         {share.status === 'accepted' ? '✓ Accepted' : '⏳ Pending'}
                       </span>
-
-                      {/* Permission select */}
                       <select
                         className={styles.permSelect}
                         value={share.permission}
                         disabled={!!permChanging[share.id]}
                         onChange={e => handlePermChange(share.id, e.target.value)}
-                        title="Change permission"
                       >
                         <option value="view">View</option>
                         <option value="edit">Edit</option>
                       </select>
-
-                      {/* Revoke */}
                       <button
                         className={styles.revokeBtn}
                         disabled={!!revoking[share.id]}
                         onClick={() => handleRevoke(share.id)}
-                        title="Revoke access"
                       >
                         {revoking[share.id] ? <SpinnerIcon /> : <TrashIcon />}
                       </button>
@@ -463,21 +425,17 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
                 </div>
               </div>
 
-              {/* Feedback messages */}
               {shareError   && <div className={styles.formError}>{shareError}</div>}
               {shareSuccess && <div className={styles.formSuccess}>{shareSuccess}</div>}
 
-              {/* Submit */}
-              <button
-                type="submit"
-                className={styles.submitBtn}
-                disabled={shareLoading}
-              >
-                {shareLoading ? <><SpinnerIcon /> Sending…</> : <><SendIcon size={15} /> Send Invite</>}
+              <button type="submit" className={styles.submitBtn} disabled={shareLoading}>
+                {shareLoading
+                  ? <><SpinnerIcon /> Sending… (may take up to 60s on first send)</>
+                  : <><SendIcon size={15} /> Send Invite</>
+                }
               </button>
             </form>
 
-            {/* Feature list */}
             <div className={styles.featureList}>
               {[
                 { icon: '📨', text: 'Invite by email — view or edit permissions' },
@@ -501,7 +459,6 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
 // ─────────────────────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────────────────────
-
 function PermBadge({ permission }) {
   const isEdit = permission === 'edit'
   return (

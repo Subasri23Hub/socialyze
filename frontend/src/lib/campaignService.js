@@ -206,8 +206,8 @@ export async function fetchUserCampaigns() {
           updated_at:    c.updated_at,
           output_count:  c.campaign_outputs?.length ?? 0,
           output_types:  [...new Set((c.campaign_outputs || []).map(o => o.output_type))],
-          _isSharedEdit: true,   // flag so UI can show "Shared" badge & hide delete
-          _shareId:      s.id,   // the shared_workspaces row id
+          _isSharedEdit: true,
+          _shareId:      s.id,
         }
       })
     return { data: [...ownShaped, ...sharedShaped], error: null }
@@ -218,16 +218,6 @@ export async function fetchUserCampaigns() {
 
 /**
  * Save a campaign output when the current user is an EDIT-PERMISSION invitee.
- * Writes directly to the shared campaign_id, bypassing the brand-name lookup
- * (which would otherwise create a new campaign under the invitee's user_id).
- *
- * The invitee's own user_id is stored in campaign_outputs.user_id so we can
- * attribute authorship. The campaign row itself is NOT modified.
- *
- * @param {string} campaignId   – the owner's campaign UUID
- * @param {string} outputType   – 'post_generator' | 'audience' | 'ideation' | 'custom_flow'
- * @param {object} generatedData
- * @returns {{ output: object|null, error: string|null }}
  */
 export async function saveCampaignOutputToShared(campaignId, outputType, generatedData) {
   if (!supabase) return { output: null, error: 'Supabase not configured' }
@@ -235,7 +225,6 @@ export async function saveCampaignOutputToShared(campaignId, outputType, generat
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { output: null, error: 'Not authenticated' }
 
-  // Verify the invoking user genuinely has edit permission for this campaign
   const { data: shareRow, error: shareCheckErr } = await supabase
     .from('shared_workspaces')
     .select('id, permission')
@@ -252,7 +241,7 @@ export async function saveCampaignOutputToShared(campaignId, outputType, generat
     .from('campaign_outputs')
     .insert({
       campaign_id:    campaignId,
-      user_id:        user.id,       // invitee's own user_id for attribution
+      user_id:        user.id,
       output_type:    outputType,
       generated_data: generatedData,
     })
@@ -265,10 +254,6 @@ export async function saveCampaignOutputToShared(campaignId, outputType, generat
 
 /**
  * Mark a share row as 'accepted' when the invitee first opens the shared campaign.
- * Safe to call multiple times — only updates when status is still 'pending'.
- *
- * @param {string} campaignId
- * @returns {Promise<void>}
  */
 export async function markShareAccepted(campaignId) {
   if (!supabase) return
@@ -285,8 +270,6 @@ export async function markShareAccepted(campaignId) {
 
 /**
  * Delete a campaign and all its outputs (cascade handled by DB).
- * @param {string} campaignId
- * @returns {{ error: string|null }}
  */
 export async function deleteCampaign(campaignId) {
   if (!supabase) return { error: 'Supabase not configured' }
@@ -298,13 +281,14 @@ export async function deleteCampaign(campaignId) {
     .from('campaigns')
     .delete()
     .eq('id', campaignId)
-    .eq('user_id', user.id)   // RLS double-check
+    .eq('user_id', user.id)
 
   return { error: error ? error.message : null }
 }
 
-/** Fetch a single campaign + all its outputs.
- *  Works for both the owner AND teammates who have been granted share access.
+/**
+ * Fetch a single campaign + all its outputs.
+ * Works for both the owner AND teammates who have been granted share access.
  */
 export async function fetchCampaignWorkspace(campaignId) {
   if (!supabase) return { campaign: null, outputs: [], error: 'Supabase not configured' }
@@ -312,7 +296,6 @@ export async function fetchCampaignWorkspace(campaignId) {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return { campaign: null, outputs: [], error: 'Not authenticated' }
 
-  // ── Try owner access first ──────────────────────────────────────────
   const { data: ownedCampaign } = await supabase
     .from('campaigns')
     .select('*')
@@ -323,7 +306,6 @@ export async function fetchCampaignWorkspace(campaignId) {
   let campaign = ownedCampaign
   let isSharedAccess = false
 
-  // ── If not the owner, check if this campaign was shared with the user ─
   if (!campaign) {
     const { data: shareRow } = await supabase
       .from('shared_workspaces')
@@ -336,7 +318,6 @@ export async function fetchCampaignWorkspace(campaignId) {
       return { campaign: null, outputs: [], error: 'Campaign not found or access denied.' }
     }
 
-    // Has a valid share row — fetch the campaign without user_id filter
     const { data: sharedCampaign, error: sharedErr } = await supabase
       .from('campaigns')
       .select('*')
@@ -351,8 +332,6 @@ export async function fetchCampaignWorkspace(campaignId) {
     isSharedAccess = true
   }
 
-  // ── Fetch outputs ──────────────────────────────────────────────────
-  // Owner sees only their own outputs; shared users see all outputs for context
   const outputQuery = supabase
     .from('campaign_outputs')
     .select('*')
@@ -373,54 +352,26 @@ export async function fetchCampaignWorkspace(campaignId) {
 // ─────────────────────────────────────────────────────────────
 // SEARCH CAMPAIGNS
 // ─────────────────────────────────────────────────────────────
-
-/**
- * Search campaigns by brand / title (campaign_name).
- *
- * Prompt spec:
- *   - Match user_input only with campaign_name
- *   - Case-insensitive, partial / substring match
- *   - Empty input → return all campaigns
- *   - No match     → return empty list
- *
- * @param {string} userInput  – raw text typed by the user
- * @param {Array}  campaigns  – array of campaign objects (must have campaign_name)
- * @returns {Array}           – filtered subset
- */
 export function searchCampaigns(userInput = '', campaigns = []) {
   const query = userInput.trim().toLowerCase()
-  if (!query) return campaigns                                   // empty input → all
+  if (!query) return campaigns
   return campaigns.filter(c =>
-    String(c.campaign_name || '').toLowerCase().includes(query) // partial, case-insensitive
+    String(c.campaign_name || '').toLowerCase().includes(query)
   )
 }
 
 // ─────────────────────────────────────────────────────────────
-// CAMPAIGN BRIEF — stored in localStorage (keyed per user_id)
-// No extra DB table needed; brief is a local preference object.
+// CAMPAIGN BRIEF
 // ─────────────────────────────────────────────────────────────
-
 const BRIEF_KEY_PREFIX = 'campaign_brief_'
 
 function briefKey(userId) {
   return `${BRIEF_KEY_PREFIX}${userId}`
 }
 
-/**
- * Save (or update) the Campaign Brief for the logged-in user.
- * Stores to localStorage so it persists across sessions on the same device.
- *
- * Uses getSession() instead of getUser() — getSession() reads from localStorage
- * instantly without a network round-trip, so it works reliably on page load.
- *
- * @param {object} briefData – { brand_name, product_service, campaign_goal,
- *                               target_audience, tone, platforms }
- * @returns {{ error: string|null }}
- */
 export async function saveCampaignBrief(briefData) {
   if (!supabase) return { error: 'Supabase not configured' }
 
-  // getSession() reads from localStorage — no network call, always available
   const { data: { session }, error: authError } = await supabase.auth.getSession()
   if (authError || !session?.user) return { error: 'Not authenticated' }
 
@@ -437,19 +388,9 @@ export async function saveCampaignBrief(briefData) {
   }
 }
 
-/**
- * Fetch the Campaign Brief for the logged-in user.
- * Returns null brief when none exists.
- *
- * Uses getSession() instead of getUser() — getSession() reads from localStorage
- * instantly without a network round-trip, so it works reliably on page load.
- *
- * @returns {{ brief: object|null, error: string|null }}
- */
 export async function fetchCampaignBrief() {
   if (!supabase) return { brief: null, error: 'Supabase not configured' }
 
-  // getSession() reads from localStorage — no network call, always available
   const { data: { session }, error: authError } = await supabase.auth.getSession()
   if (authError || !session?.user) return { brief: null, error: 'Not authenticated' }
 
@@ -465,15 +406,6 @@ export async function fetchCampaignBrief() {
 // ─────────────────────────────────────────────────────────────
 // SHARED WORKSPACES
 // ─────────────────────────────────────────────────────────────
-
-/**
- * Share a campaign with another user by email.
- *
- * @param {string} campaignId   – UUID of the campaign to share
- * @param {string} inviteeEmail – email address to share with
- * @param {'view'|'edit'} permission
- * @returns {{ share: object|null, error: string|null }}
- */
 export async function shareCampaign(campaignId, inviteeEmail, permission = 'view') {
   if (!supabase) return { share: null, error: 'Supabase not configured' }
 
@@ -503,12 +435,6 @@ export async function shareCampaign(campaignId, inviteeEmail, permission = 'view
   return { share: data, error: null }
 }
 
-/**
- * Revoke / delete a share.
- *
- * @param {string} shareId  – UUID of the shared_workspaces row
- * @returns {{ error: string|null }}
- */
 export async function revokeShare(shareId) {
   if (!supabase) return { error: 'Supabase not configured' }
 
@@ -519,18 +445,11 @@ export async function revokeShare(shareId) {
     .from('shared_workspaces')
     .delete()
     .eq('id', shareId)
-    .eq('owner_id', user.id)   // RLS double-check
+    .eq('owner_id', user.id)
 
   return { error: error ? error.message : null }
 }
 
-/**
- * Update the permission level of an existing share.
- *
- * @param {string} shareId
- * @param {'view'|'edit'} permission
- * @returns {{ error: string|null }}
- */
 export async function updateSharePermission(shareId, permission) {
   if (!supabase) return { error: 'Supabase not configured' }
 
@@ -546,12 +465,6 @@ export async function updateSharePermission(shareId, permission) {
   return { error: error ? error.message : null }
 }
 
-/**
- * Fetch all shares the current user has CREATED (outgoing shares),
- * including the campaign name for display.
- *
- * @returns {{ data: Array, error: string|null }}
- */
 export async function fetchOutgoingShares() {
   if (!supabase) return { data: [], error: 'Supabase not configured' }
 
@@ -575,12 +488,6 @@ export async function fetchOutgoingShares() {
   return { data: data || [], error: null }
 }
 
-/**
- * Fetch all campaigns that have been shared WITH the current user
- * (incoming shares — identified by their email address).
- *
- * @returns {{ data: Array, error: string|null }}
- */
 export async function fetchIncomingShares() {
   if (!supabase) return { data: [], error: 'Supabase not configured' }
 
@@ -604,13 +511,6 @@ export async function fetchIncomingShares() {
   return { data: data || [], error: null }
 }
 
-/**
- * Fetch all shares for a specific campaign (owner view).
- * Used to show the share list inside the Share modal.
- *
- * @param {string} campaignId
- * @returns {{ data: Array, error: string|null }}
- */
 export async function fetchCampaignShares(campaignId) {
   if (!supabase) return { data: [], error: 'Supabase not configured' }
 
@@ -635,8 +535,10 @@ export async function fetchCampaignShares(campaignId) {
 /**
  * Send a workspace share invite email via the backend.
  *
- * Always uses VITE_API_URL (set in frontend/.env).
- * Never falls back to localhost — in production there is no local server.
+ * - Always uses VITE_API_URL (set in frontend/.env / Vercel env vars).
+ * - Never falls back to localhost — in production there is no local server.
+ * - Has a 20-second AbortController timeout so the UI never hangs
+ *   (Render free tier cold-starts can take 30–60 s; we fail fast and tell the user).
  *
  * @param {string} toEmail
  * @param {string} campaignName
@@ -647,18 +549,23 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  // Use the configured backend URL — NEVER fall back to localhost in production.
-  // VITE_API_URL must be set in frontend/.env for emails to work.
+  // VITE_API_URL must be set in frontend/.env AND in Vercel environment variables.
   const apiUrl = import.meta.env.VITE_API_URL
   if (!apiUrl) {
-    console.error('[sendInviteEmail] VITE_API_URL is not set in frontend/.env')
+    console.error('[sendInviteEmail] VITE_API_URL is not set — cannot reach email backend.')
     return { success: false, error: 'Email service not configured (missing VITE_API_URL).' }
   }
+
+  // 60-second timeout — Render free-tier cold-starts can take 30-50 s;
+  // we need to wait long enough for the backend to wake up and send the email.
+  const controller = new AbortController()
+  const timeoutId  = setTimeout(() => controller.abort(), 60000)
 
   try {
     const res = await fetch(`${apiUrl}/send-invite`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal:  controller.signal,
       body: JSON.stringify({
         toEmail,
         ownerEmail:   user.email,
@@ -666,6 +573,8 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
         permission,
       }),
     })
+
+    clearTimeout(timeoutId)
 
     let json
     try { json = await res.json() } catch { json = {} }
@@ -677,7 +586,18 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
     }
 
     return { success: true, error: null }
+
   } catch (err) {
+    clearTimeout(timeoutId)
+
+    if (err.name === 'AbortError') {
+      console.error('[sendInviteEmail] Request timed out after 60 s — backend may be cold-starting.')
+      return {
+        success: false,
+        error:   'The email server took too long to respond. The share was saved — the recipient can still log in to access it.',
+      }
+    }
+
     console.error('[sendInviteEmail] Network error:', err.message)
     return { success: false, error: `Could not reach email service: ${err.message}` }
   }
