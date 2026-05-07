@@ -156,7 +156,11 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
 
     if (emailSent) {
       setShareSuccess(`✓ Invite sent to ${capturedEmail}!`)
-      setTimeout(() => setShareSuccess(''), 5000)
+      // Switch to My Shares tab so the user immediately sees the sent invite
+      setTimeout(() => {
+        setShareSuccess('')
+        setTab('outgoing')
+      }, 1500)
     } else {
       // Share is saved in DB — recipient can still access it.
       // Surface the error so the user knows what happened.
