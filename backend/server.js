@@ -285,9 +285,11 @@ app.get("/health", (_req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /send-invite
+// FIX: now reads campaignId from the request body and passes it to
+//      sendShareInvite() so the email deep-link includes ?share=<campaignId>
 // ─────────────────────────────────────────────────────────────────────────────
 app.post("/send-invite", async (req, res) => {
-  const { toEmail, ownerEmail, campaignName, permission = "view" } = req.body;
+  const { toEmail, ownerEmail, campaignName, campaignId, permission = "view" } = req.body;
   if (!toEmail || !ownerEmail || !campaignName) {
     return res.status(400).json({ error: "toEmail, ownerEmail, and campaignName are required." });
   }
@@ -304,7 +306,7 @@ app.post("/send-invite", async (req, res) => {
   }
 
   const { success, error } = await sendShareInvite({
-    toEmail, ownerEmail, campaignName, permission,
+    toEmail, ownerEmail, campaignName, campaignId, permission,
     appUrl: appUrl || "https://socialyze-nu.vercel.app",
   });
 
@@ -502,8 +504,6 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
     }
 
     // Guard: reject responses where ALL platform posts have empty hook AND caption.
-    // Groq sometimes fills only best_time / content_type and leaves hook + caption as ""
-    // which causes the UI to show only "BEST TIME" with no post content.
     if (parsed && Array.isArray(parsed.platforms) && parsed.platforms.length > 0) {
       const hasRealPlatformContent = parsed.platforms.some(p =>
         Array.isArray(p.posts) && p.posts.some(post =>
@@ -519,8 +519,6 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
 
     if (!parsed) {
       console.warn("[/generate-post] Groq returned null/placeholder. Serving domain fallback.");
-      // Pool of 5 unique fallback variations — sliced to varCount so the
-      // correct number is always returned regardless of what the user selected.
       const ALL_FALLBACK_POSTS = [
         `${target_audience} don't need another ${product_or_service}.\n\nThey need one that actually works for how they live. ${brand_name} built ${product_or_service} around that truth.\n\n${call_to_action}.`,
         `Here's what happens after ${target_audience} try ${brand_name}'s ${product_or_service} for 7 days.\n\n${campaign_goal}. No complicated setup. No learning curve.\n\n${call_to_action}.`,
@@ -582,8 +580,6 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { e
       campaign_summary:   String(parsed.campaign_summary  || ""),
       brand_voice_guide:  String(parsed.brand_voice_guide || ""),
       audience_insight:   String(parsed.audience_insight  || ""),
-      // Strip any hollow posts before sending to frontend — posts where both
-      // hook and caption are empty strings would render as blank variation cards.
       platforms: (parsed.platforms || []).map(p => ({
         ...p,
         posts: (Array.isArray(p.posts) ? p.posts : []).filter(post =>

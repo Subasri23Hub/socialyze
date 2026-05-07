@@ -45,6 +45,22 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // FIX: Handle ?share=<campaignId> deep-link from invite emails.
+  // When the recipient clicks "Open CampaignAI →" in their email they land on
+  // https://socialyze-nu.vercel.app?share=<campaignId>
+  // After they sign in, we read the param and open that workspace directly,
+  // then strip the param from the URL so it doesn't re-trigger on refresh.
+  useEffect(() => {
+    if (!session) return   // wait until authenticated
+    const params = new URLSearchParams(window.location.search)
+    const shareId = params.get('share')
+    if (shareId) {
+      window.history.replaceState({}, '', '/')  // clean URL
+      setActiveNav('shared')
+      setWorkspaceId(shareId)
+    }
+  }, [session])  // runs once session is resolved (null → object)
+
   function openWorkspace(id) { setWorkspaceId(id) }
   function handleNav(id)     { setWorkspaceId(null); setActiveNav(id) }
   function handleBack()      { setWorkspaceId(null) }

@@ -550,12 +550,16 @@ export function warmUpBackend() {
  * Automatically retries once if the first attempt times out
  * (handles Render free-tier cold-start gracefully).
  *
+ * FIX: now accepts campaignId and includes it in the payload so the
+ * backend can build a deep-link: https://socialyze-nu.vercel.app?share=<campaignId>
+ *
  * @param {string} toEmail
  * @param {string} campaignName
  * @param {'view'|'edit'} permission
+ * @param {string} [campaignId]  — campaign UUID for deep-linking (optional but strongly recommended)
  * @returns {Promise<{ success: boolean, error: string|null }>}
  */
-export async function sendInviteEmail(toEmail, campaignName, permission = 'view') {
+export async function sendInviteEmail(toEmail, campaignName, permission = 'view', campaignId = null) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
@@ -565,10 +569,12 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
     return { success: false, error: 'Email service not configured (missing VITE_API_URL).' }
   }
 
+  // FIX: include campaignId in payload so the backend can build the deep-link
   const payload = JSON.stringify({
     toEmail,
     ownerEmail:   user.email,
     campaignName,
+    campaignId,
     permission,
   })
 

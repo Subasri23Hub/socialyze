@@ -137,10 +137,12 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
     }
 
     // Step 2: Capture values before resetting form
-    const selectedCamp  = myCampaigns.find(c => c.id === selectedCampaign)
-    const campaignName  = selectedCamp?.campaign_name || 'a campaign'
-    const capturedEmail = inviteeEmail.trim()
-    const capturedPerm  = permission
+    // FIX: also capture the campaign UUID (selectedCampaign) for the email deep-link
+    const selectedCamp      = myCampaigns.find(c => c.id === selectedCampaign)
+    const campaignName      = selectedCamp?.campaign_name || 'a campaign'
+    const capturedEmail     = inviteeEmail.trim()
+    const capturedPerm      = permission
+    const capturedCampaignId = selectedCampaign  // UUID — used for ?share= deep-link in email
 
     // Step 3: Reset UI immediately — don't wait for email
     setShareLoading(false)
@@ -153,7 +155,9 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
     setTimeout(() => setShareSuccess(''), 4000)
 
     // Step 4: Send email in background — UI is already updated
-    sendInviteEmail(capturedEmail, campaignName, capturedPerm).catch(() => {})
+    // FIX: pass capturedCampaignId so the email button links to
+    //      https://socialyze-nu.vercel.app?share=<campaignId>
+    sendInviteEmail(capturedEmail, campaignName, capturedPerm, capturedCampaignId).catch(() => {})
   }
 
   // ── Revoke a share ───────────────────────────────────────────
