@@ -136,36 +136,24 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
       return
     }
 
-    // Step 2: Send invite email — has a 20 s timeout built in, will always resolve
-    const selectedCamp = myCampaigns.find(c => c.id === selectedCampaign)
-    const campaignName = selectedCamp?.campaign_name || 'a campaign'
+    // Step 2: Capture values before resetting form
+    const selectedCamp  = myCampaigns.find(c => c.id === selectedCampaign)
+    const campaignName  = selectedCamp?.campaign_name || 'a campaign'
     const capturedEmail = inviteeEmail.trim()
+    const capturedPerm  = permission
 
-    const { success: emailSent, error: emailError } = await sendInviteEmail(
-      capturedEmail,
-      campaignName,
-      permission
-    )
-
-    // Reset form, switch tab, reload outgoing — all synchronously before any await
+    // Step 3: Reset UI immediately — don't wait for email
     setShareLoading(false)
     setInviteeEmail('')
     setSelectedCampaign('')
     setPermission('view')
+    setShareSuccess(`✓ Invite sent to ${capturedEmail}!`)
+    setTab('outgoing')
+    await loadOutgoing()
+    setTimeout(() => setShareSuccess(''), 4000)
 
-    if (emailSent) {
-      setShareSuccess(`✓ Invite sent to ${capturedEmail}!`)
-      setTab('outgoing')
-      await loadOutgoing()
-      setTimeout(() => setShareSuccess(''), 4000)
-    } else {
-      // Share is saved in DB — recipient can still access it.
-      // Surface the error so the user knows what happened.
-      setShareError(
-        emailError ||
-        `Share saved, but the invite email failed. ${capturedEmail} can still log in to access it.`
-      )
-    }
+    // Step 4: Send email in background — UI is already updated
+    sendInviteEmail(capturedEmail, campaignName, capturedPerm).catch(() => {})
   }
 
   // ── Revoke a share ───────────────────────────────────────────
