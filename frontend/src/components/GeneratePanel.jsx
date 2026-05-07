@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from './GeneratePanel.module.css'
-import { saveCampaignOutput, saveCampaignOutputToShared, normaliseBrand } from '../lib/campaignService'
+import { saveCampaignOutput, saveCampaignOutputToShared, normaliseBrand, warmUpBackend } from '../lib/campaignService'
 import FillFromBriefButton from './FillFromBriefButton.jsx'
 import { generateWithFallback } from '../lib/generateWithFallback'
 import { postGeneratorFallback } from '../lib/fallbackService'
@@ -24,6 +24,9 @@ export default function GeneratePanel({ onClose, onSaved, onNoBrief, sharedCampa
   const [activeTab,   setActiveTab]   = useState(null)
   const [saving,      setSaving]      = useState(false)
   const [saveMsg,     setSaveMsg]     = useState('')
+
+  // Warm up Render backend the moment this panel opens
+  useEffect(() => { warmUpBackend() }, [])
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })) }
 
@@ -255,24 +258,32 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
 
       let parsed = null
 
-      // ── Step 1: Try backend (Render) — same pattern as CustomFlowPanel ──
+      // ── Step 1: Try backend (Render) — with timeout so cold-start never hangs ──
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/generate-post`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            brand_name:         form.brand,
-            product_or_service: form.product,
-            campaign_goal:      form.goal,
-            campaign_type:      form.campaignType,
-            target_audience:    form.audience,
-            key_message:        form.keywords || form.goal,
-            call_to_action:     `Explore ${form.product} by ${form.brand}`,
-            tone:               form.tone,
-            platforms:          selectedPlatforms,
-            variations:         form.variations || 3,
-          }),
-        })
+        const ctrl = new AbortController()
+        const tid  = setTimeout(() => ctrl.abort(), 55000)
+        let res
+        try {
+          res = await fetch(`${import.meta.env.VITE_API_URL}/generate-post`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: ctrl.signal,
+            body: JSON.stringify({
+              brand_name:         form.brand,
+              product_or_service: form.product,
+              campaign_goal:      form.goal,
+              campaign_type:      form.campaignType,
+              target_audience:    form.audience,
+              key_message:        form.keywords || form.goal,
+              call_to_action:     `Explore ${form.product} by ${form.brand}`,
+              tone:               form.tone,
+              platforms:          selectedPlatforms,
+              variations:         form.variations || 3,
+            }),
+          })
+        } finally {
+          clearTimeout(tid)
+        }
         if (res.ok) {
           const backendData = await res.json()
 
@@ -401,7 +412,10 @@ Return ONLY valid JSON. No explanation, no preamble, no markdown. Start with { a
       setResult(shaped)
       setActiveTab(firstTab)
     } catch (err) {
+      console.error('[GeneratePanel] Unexpected error:', err)
       setError('Generation failed. Please try again.')
+      setLoading(false)
+      return
     }
 
     setLoading(false)
