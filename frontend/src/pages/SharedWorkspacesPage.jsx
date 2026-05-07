@@ -13,6 +13,7 @@ import {
   revokeShare,
   updateSharePermission,
   sendInviteEmail,
+  warmUpBackend,
 } from '../lib/campaignService'
 import styles from './SharedWorkspacesPage.module.css'
 
@@ -83,6 +84,9 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
   const [permChanging, setPermChanging] = useState({})
 
   // ── Load data ────────────────────────────────────────────────
+  // Pre-warm the Render backend immediately when this page mounts
+  // so it's already awake by the time the user clicks Send Invite.
+  useEffect(() => { warmUpBackend() }, [])
   const loadIncoming = useCallback(async () => {
     setLoadingIn(true); setErrorIn('')
     const { data, error } = await fetchIncomingShares()
@@ -430,7 +434,7 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
 
               <button type="submit" className={styles.submitBtn} disabled={shareLoading}>
                 {shareLoading
-                  ? <><SpinnerIcon /> Sending… (may take up to 60s on first send)</>
+                  ? <><SpinnerIcon /> Sending…</>
                   : <><SendIcon size={15} /> Send Invite</>
                 }
               </button>

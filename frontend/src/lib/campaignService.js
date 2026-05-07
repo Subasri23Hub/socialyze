@@ -530,15 +530,25 @@ export async function fetchCampaignShares(campaignId) {
 
 // ─────────────────────────────────────────────────────────────
 // EMAIL INVITE — calls Express /send-invite endpoint
+// Pre-warms the Render backend so the actual send is instant.
 // ─────────────────────────────────────────────────────────────
 
 /**
+ * Wake up the Render backend silently in the background.
+ * Call this as early as possible (e.g. when the Share tab is opened)
+ * so by the time the user clicks Send, the server is already warm.
+ */
+export function warmUpBackend() {
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (!apiUrl) return
+  // Fire-and-forget — we don't care about the response, just waking the server.
+  fetch(`${apiUrl}/health`, { method: 'GET' }).catch(() => {})
+}
+
+/**
  * Send a workspace share invite email via the backend.
- *
- * - Always uses VITE_API_URL (set in frontend/.env / Vercel env vars).
- * - Never falls back to localhost — in production there is no local server.
- * - Has a 20-second AbortController timeout so the UI never hangs
- *   (Render free tier cold-starts can take 30–60 s; we fail fast and tell the user).
+ * Automatically retries once if the first attempt times out
+ * (handles Render free-tier cold-start gracefully).
  *
  * @param {string} toEmail
  * @param {string} campaignName
@@ -549,56 +559,69 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  // VITE_API_URL must be set in frontend/.env AND in Vercel environment variables.
   const apiUrl = import.meta.env.VITE_API_URL
   if (!apiUrl) {
-    console.error('[sendInviteEmail] VITE_API_URL is not set — cannot reach email backend.')
+    console.error('[sendInviteEmail] VITE_API_URL is not set.')
     return { success: false, error: 'Email service not configured (missing VITE_API_URL).' }
   }
 
-  // 60-second timeout — Render free-tier cold-starts can take 30-50 s;
-  // we need to wait long enough for the backend to wake up and send the email.
-  const controller = new AbortController()
-  const timeoutId  = setTimeout(() => controller.abort(), 60000)
+  const payload = JSON.stringify({
+    toEmail,
+    ownerEmail:   user.email,
+    campaignName,
+    permission,
+  })
 
-  try {
-    const res = await fetch(`${apiUrl}/send-invite`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal:  controller.signal,
-      body: JSON.stringify({
-        toEmail,
-        ownerEmail:   user.email,
-        campaignName,
-        permission,
-      }),
-    })
+  // Try up to 2 attempts — first attempt may hit a cold-starting backend.
+  // Second attempt will always be fast since the server is now warm.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const controller = new AbortController()
+    // Give the backend 55 s on attempt 1 (enough for cold-start + send),
+    // and 15 s on attempt 2 (server is warm by now, should be instant).
+    const timeoutMs = attempt === 1 ? 55000 : 15000
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-    clearTimeout(timeoutId)
+    try {
+      const res = await fetch(`${apiUrl}/send-invite`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal:  controller.signal,
+        body:    payload,
+      })
 
-    let json
-    try { json = await res.json() } catch { json = {} }
+      clearTimeout(timeoutId)
 
-    if (!res.ok) {
-      const errMsg = json.error || json.detail || `Server returned ${res.status}`
-      console.error('[sendInviteEmail] Backend error:', errMsg)
-      return { success: false, error: errMsg }
-    }
+      let json
+      try { json = await res.json() } catch { json = {} }
 
-    return { success: true, error: null }
-
-  } catch (err) {
-    clearTimeout(timeoutId)
-
-    if (err.name === 'AbortError') {
-      console.error('[sendInviteEmail] Request timed out after 60 s — backend may be cold-starting.')
-      return {
-        success: false,
-        error:   'The email server took too long to respond. The share was saved — the recipient can still log in to access it.',
+      if (!res.ok) {
+        const errMsg = json.error || json.detail || `Server returned ${res.status}`
+        console.error(`[sendInviteEmail] Attempt ${attempt} — backend error:`, errMsg)
+        return { success: false, error: errMsg }
       }
-    }
 
-    console.error('[sendInviteEmail] Network error:', err.message)
-    return { success: false, error: `Could not reach email service: ${err.message}` }
+      console.log(`[sendInviteEmail] ✅ Sent on attempt ${attempt}`)
+      return { success: true, error: null }
+
+    } catch (err) {
+      clearTimeout(timeoutId)
+
+      if (err.name === 'AbortError') {
+        console.warn(`[sendInviteEmail] Attempt ${attempt} timed out after ${timeoutMs / 1000}s.`)
+        if (attempt < 2) {
+          console.log('[sendInviteEmail] Retrying now that backend should be warm...')
+          continue // go to attempt 2
+        }
+        return {
+          success: false,
+          error:   'The email server is unavailable right now. The share was saved — the recipient can still log in to access it.',
+        }
+      }
+
+      console.error(`[sendInviteEmail] Attempt ${attempt} — network error:`, err.message)
+      return { success: false, error: `Could not reach email service: ${err.message}` }
+    }
   }
+
+  return { success: false, error: 'Email sending failed after retries.' }
 }
