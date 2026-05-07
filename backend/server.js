@@ -297,9 +297,15 @@ app.post("/send-invite", async (req, res) => {
     return res.status(400).json({ error: "permission must be 'view' or 'edit'." });
   }
 
+  // APP_URL must be set in backend/.env — never fall back to localhost in production.
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    console.error("[/send-invite] APP_URL is not set in backend/.env — email link will be broken.");
+  }
+
   const { success, error } = await sendShareInvite({
     toEmail, ownerEmail, campaignName, permission,
-    appUrl: process.env.APP_URL || "http://localhost:5173",
+    appUrl: appUrl || "https://socialyze-nu.vercel.app",
   });
 
   if (!success) {

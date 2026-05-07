@@ -627,12 +627,16 @@ export async function fetchCampaignShares(campaignId) {
   if (error) return { data: [], error: error.message }
   return { data: data || [], error: null }
 }
+
 // ─────────────────────────────────────────────────────────────
 // EMAIL INVITE — calls Express /send-invite endpoint
 // ─────────────────────────────────────────────────────────────
 
 /**
  * Send a workspace share invite email via the backend.
+ *
+ * Always uses VITE_API_URL (set in frontend/.env).
+ * Never falls back to localhost — in production there is no local server.
  *
  * @param {string} toEmail
  * @param {string} campaignName
@@ -643,7 +647,13 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  // Use the configured backend URL — NEVER fall back to localhost in production.
+  // VITE_API_URL must be set in frontend/.env for emails to work.
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (!apiUrl) {
+    console.error('[sendInviteEmail] VITE_API_URL is not set in frontend/.env')
+    return { success: false, error: 'Email service not configured (missing VITE_API_URL).' }
+  }
 
   try {
     const res = await fetch(`${apiUrl}/send-invite`, {
@@ -656,10 +666,19 @@ export async function sendInviteEmail(toEmail, campaignName, permission = 'view'
         permission,
       }),
     })
-    const json = await res.json()
-    if (!res.ok) return { success: false, error: json.error || 'Email failed' }
+
+    let json
+    try { json = await res.json() } catch { json = {} }
+
+    if (!res.ok) {
+      const errMsg = json.error || json.detail || `Server returned ${res.status}`
+      console.error('[sendInviteEmail] Backend error:', errMsg)
+      return { success: false, error: errMsg }
+    }
+
     return { success: true, error: null }
   } catch (err) {
-    return { success: false, error: err.message }
+    console.error('[sendInviteEmail] Network error:', err.message)
+    return { success: false, error: `Could not reach email service: ${err.message}` }
   }
 }

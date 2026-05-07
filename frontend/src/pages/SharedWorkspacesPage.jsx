@@ -146,26 +146,44 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
     if (!emailRx.test(inviteeEmail.trim())) { setShareError('Please enter a valid email address.'); return }
 
     setShareLoading(true)
+
+    // Step 1: Save the share record to the database
     const { error } = await shareCampaign(selectedCampaign, inviteeEmail.trim(), permission)
-    setShareLoading(false)
 
     if (error) {
+      setShareLoading(false)
       setShareError(error)
+      return
+    }
+
+    // Step 2: Send the invite email — await it and surface any failure
+    const selectedCamp = myCampaigns.find(c => c.id === selectedCampaign)
+    const campaignName = selectedCamp?.campaign_name || 'a campaign'
+
+    const { success: emailSent, error: emailError } = await sendInviteEmail(
+      inviteeEmail.trim(),
+      campaignName,
+      permission
+    )
+
+    setShareLoading(false)
+
+    if (!emailSent) {
+      // Share was saved to DB successfully, but email delivery failed.
+      // Show a partial-success message so the user knows what happened.
+      setShareError(
+        `Share saved, but the invite email could not be sent: ${emailError || 'Unknown error'}. ` +
+        `The recipient can still access the campaign if they log in with ${inviteeEmail.trim()}.`
+      )
     } else {
       setShareSuccess(`Invite sent to ${inviteeEmail.trim()}!`)
-
-      const selectedCamp = myCampaigns.find(c => c.id === selectedCampaign)
-      const campaignName = selectedCamp?.campaign_name || 'a campaign'
-
-      sendInviteEmail(inviteeEmail.trim(), campaignName, permission)
-        .catch(console.warn)
-
-      setInviteeEmail('')
-      setSelectedCampaign('')
-      setPermission('view')
-      loadOutgoing()
       setTimeout(() => setShareSuccess(''), 4000)
     }
+
+    setInviteeEmail('')
+    setSelectedCampaign('')
+    setPermission('view')
+    loadOutgoing()
   }
 
   // ── Revoke a share ───────────────────────────────────────────
