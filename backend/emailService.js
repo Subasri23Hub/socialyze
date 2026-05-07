@@ -84,7 +84,7 @@ function fromAddress() {
 // ─────────────────────────────────────────────────────────────────────────────
 function buildInviteHTML({ ownerEmail, campaignName, permission, appUrl }) {
   const permLabel  = permission === 'edit' ? 'view & edit' : 'view';
-  const safeApp    = appUrl || 'https://socialyze.app';
+  const safeApp    = appUrl || 'https://socialyze-nu.vercel.app';
   const safeCamp   = campaignName.charAt(0).toUpperCase() + campaignName.slice(1);
 
   return `<!DOCTYPE html>
@@ -187,7 +187,7 @@ ${ownerEmail} has shared the campaign "${campaignName}" with you.
 Permission: ${permLabel}
 
 Open Socialyze to see it in your "Shared With Me" tab:
-${appUrl || 'https://socialyze.app'}
+${appUrl || 'https://socialyze-nu.vercel.app'}
 
 Sign in with this email address to access the workspace.
 
