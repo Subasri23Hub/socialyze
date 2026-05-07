@@ -147,20 +147,17 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
       permission
     )
 
-    // Always reset the form regardless of email outcome
+    // Reset form, switch tab, reload outgoing — all synchronously before any await
     setShareLoading(false)
     setInviteeEmail('')
     setSelectedCampaign('')
     setPermission('view')
-    loadOutgoing()
 
     if (emailSent) {
       setShareSuccess(`✓ Invite sent to ${capturedEmail}!`)
-      // Switch to My Shares tab so the user immediately sees the sent invite
-      setTimeout(() => {
-        setShareSuccess('')
-        setTab('outgoing')
-      }, 1500)
+      setTab('outgoing')
+      await loadOutgoing()
+      setTimeout(() => setShareSuccess(''), 4000)
     } else {
       // Share is saved in DB — recipient can still access it.
       // Surface the error so the user knows what happened.
@@ -226,6 +223,11 @@ export default function SharedWorkspacesPage({ onOpenWorkspace }) {
           <ShareIcon /> New Share
         </button>
       </div>
+
+      {/* ── Global success toast — visible across all tabs ── */}
+      {shareSuccess && (
+        <div className={styles.formSuccess} style={{ margin: '0 0 12px 0' }}>{shareSuccess}</div>
+      )}
 
       {/* ── Tab: Shared With Me ── */}
       {tab === 'incoming' && (
