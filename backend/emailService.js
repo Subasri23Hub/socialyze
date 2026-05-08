@@ -2,18 +2,33 @@
  * emailService.js
  * ─────────────────────────────────────────────────────────────────────────────
  * CampaignAI — Email Service (Nodemailer-based)
- * Fixes:
- *   1. Branding updated from "Socialyze" → "CampaignAI"
- *   2. "Open CampaignAI →" button deep-links to the exact shared campaign
- *      (?share=<campaignId>) so the recipient lands directly in the workspace
- *   3. Permission pill correctly shows "View Only" vs "✏️ View & Edit"
- *      with distinct colors (blue = view, orange = edit)
  *
  * Team   : Subasri B | Gautham Krishnan K | Ashwin D | Vinjarapu Ajay Kumar
  * Company: Sourcesys Technologies
  */
 
 const nodemailer = require('nodemailer');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCTION URL — never localhost.
+// Priority: APP_URL env var → hardcoded Vercel URL.
+// This constant is resolved once at startup so it is always correct.
+// ─────────────────────────────────────────────────────────────────────────────
+const PRODUCTION_APP_URL = (process.env.APP_URL || '').trim().replace(/\/$/, '');
+const VERCEL_APP_URL     = 'https://socialyze-nu.vercel.app';
+
+function resolveAppUrl(override) {
+  // 1. Explicit override passed by the caller (from server.js)
+  if (override && override.trim() && !override.includes('localhost')) {
+    return override.trim().replace(/\/$/, '');
+  }
+  // 2. Environment variable set on Render dashboard
+  if (PRODUCTION_APP_URL && !PRODUCTION_APP_URL.includes('localhost')) {
+    return PRODUCTION_APP_URL;
+  }
+  // 3. Hardcoded Vercel URL — absolute last resort, always safe
+  return VERCEL_APP_URL;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSPORT FACTORY
@@ -72,9 +87,6 @@ function fromAddress() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HTML TEMPLATE — Campaign Share Invite
-// FIX 1: CampaignAI branding
-// FIX 2: Deep-link URL includes ?share=<campaignId>
-// FIX 3: Permission pill is blue for view, orange for edit
 // ─────────────────────────────────────────────────────────────────────────────
 function buildInviteHTML({ ownerEmail, campaignName, permission, appUrl, campaignId }) {
   const isEdit    = permission === 'edit';
@@ -84,11 +96,11 @@ function buildInviteHTML({ ownerEmail, campaignName, permission, appUrl, campaig
   const permBdr   = isEdit ? '#FED7AA'     : '#BFDBFE';
   const permIcon  = isEdit ? '✏️'          : '👁';
 
-  // Deep-link: landing on ?share=<campaignId> will be picked up by App.jsx
-  // to open that workspace directly after sign-in.
+  // Always use resolveAppUrl to guarantee no localhost in production
+  const safeUrl  = resolveAppUrl(appUrl);
   const deepLink = campaignId
-    ? `${appUrl}?share=${campaignId}`
-    : appUrl;
+    ? `${safeUrl}?share=${campaignId}`
+    : safeUrl;
 
   const safeCamp = campaignName.charAt(0).toUpperCase() + campaignName.slice(1);
 
@@ -203,7 +215,8 @@ function buildInviteHTML({ ownerEmail, campaignName, permission, appUrl, campaig
 // ─────────────────────────────────────────────────────────────────────────────
 function buildInviteText({ ownerEmail, campaignName, permission, appUrl, campaignId }) {
   const permLabel = permission === 'edit' ? 'View & Edit' : 'View Only';
-  const deepLink  = campaignId ? `${appUrl}?share=${campaignId}` : appUrl;
+  const safeUrl   = resolveAppUrl(appUrl);
+  const deepLink  = campaignId ? `${safeUrl}?share=${campaignId}` : safeUrl;
   return `You've been invited to collaborate on CampaignAI!
 
 ${ownerEmail} has shared the campaign "${campaignName}" with you.
@@ -228,13 +241,14 @@ Sign in with this email address to access the workspace.
  * @param {string} opts.toEmail       — recipient
  * @param {string} opts.ownerEmail    — who is sharing
  * @param {string} opts.campaignName  — campaign being shared
- * @param {string} [opts.campaignId]  — campaign UUID for deep-linking (NEW)
+ * @param {string} [opts.campaignId]  — campaign UUID for deep-linking
  * @param {'view'|'edit'} opts.permission
- * @param {string} [opts.appUrl]      — base URL of the app (defaults to APP_URL env var)
+ * @param {string} [opts.appUrl]      — base URL (resolved safely, never localhost)
  * @returns {Promise<{ success: boolean, error: string|null }>}
  */
 async function sendShareInvite({ toEmail, ownerEmail, campaignName, campaignId, permission = 'view', appUrl }) {
-  const url = appUrl || process.env.APP_URL || 'https://socialyze-nu.vercel.app';
+  const url = resolveAppUrl(appUrl);
+  console.log(`[emailService] Resolved app URL: ${url} (env APP_URL="${PRODUCTION_APP_URL || 'not set'}")`);
   try {
     const info = await transporter.sendMail({
       from:    fromAddress(),
@@ -244,6 +258,7 @@ async function sendShareInvite({ toEmail, ownerEmail, campaignName, campaignId, 
       html:    buildInviteHTML({ ownerEmail, campaignName, permission, appUrl: url, campaignId }),
     });
     console.log(`[emailService] Share invite sent to ${toEmail} — messageId: ${info.messageId}`);
+    console.log(`[emailService] Deep-link: ${url}${campaignId ? '?share=' + campaignId : ''}`);
     return { success: true, error: null };
   } catch (err) {
     console.error('[emailService] Failed to send invite:', err.message);
@@ -255,12 +270,18 @@ async function sendShareInvite({ toEmail, ownerEmail, campaignName, campaignId, 
  * Verify the SMTP connection on server startup.
  */
 async function verifyConnection() {
+  const url = resolveAppUrl(null);
+  console.log(`✅  Email service: APP_URL resolved to "${url}"`);
+  if (url.includes('localhost')) {
+    console.error('🚨  WARNING: APP_URL contains localhost — email links will be broken in production!');
+    console.error('   Set APP_URL=https://socialyze-nu.vercel.app in the Render environment dashboard.');
+  }
   try {
     await transporter.verify();
-    console.log('✅  Email service ready');
+    console.log('✅  Email transport ready');
   } catch (err) {
-    console.warn('⚠️  Email service not configured or unreachable:', err.message);
-    console.warn('   Set EMAIL_PROVIDER + credentials in backend/.env to enable invite emails.');
+    console.warn('⚠️  Email transport not configured or unreachable:', err.message);
+    console.warn('   Set EMAIL_PROVIDER + credentials in Render environment variables to enable invite emails.');
   }
 }
 
